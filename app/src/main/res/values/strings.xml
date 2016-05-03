@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Poche</string>
+    <string name="action_configuration">Configuration</string>
+    <string name="title_activity_config">Configuration</string>
+
+    <!-- Strings related to Configurations -->
+    <string name="pref_swipedirection">Left/Right swipe direction</string>
+    <string-array name="pref_swipedirection_values">
+        <item>Normal</item>
+        <item>Reversed</item>
+    </string-array>
+    <string-array name="pref_swipedirection_summary">
+        <item>Normal - Left by left swipe, right by right</item>
+        <item>Reversed - Left by right swipe, right by left</item>
+    </string-array>
+    <string name="pref_wakelock">Wake lock</string>
+</resources>
