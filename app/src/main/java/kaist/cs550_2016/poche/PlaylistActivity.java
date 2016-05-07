@@ -1,6 +1,9 @@
 package kaist.cs550_2016.poche;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,10 +13,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class PlaylistActivity extends AppCompatActivity {
+import java.io.File;
+import java.util.List;
+
+public class PlaylistActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<List<File>>{
 
     private ListView playlistListView;
     private ArrayAdapter<String> listViewAdapter;
@@ -26,24 +34,22 @@ public class PlaylistActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         playlistListView = (ListView) findViewById(R.id.playlist_list);
         listViewAdapter = new ArrayAdapter<>(this, R.layout.activity_playlist_list_item, listViewValues);
         playlistListView.setAdapter(listViewAdapter);
+        playlistListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent = new Intent(PlaylistActivity.this, MainActivity.class);
+                //intent.setData(Uri.parse("file://" + view.getTag().toString()));
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.w("Playlist", "OnResume:");
         ConfigHelper configHelper = ConfigHelper.getInstance();
         listViewValues[0] = "Swipe mode: " + configHelper.getSwipeDirection();
         listViewValues[1] = "Wakelock enabled?: " + configHelper.isWakeLockEnabled();
@@ -72,5 +78,21 @@ public class PlaylistActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public Loader<List<File>> onCreateLoader(int id, Bundle args) {
+        return new PlaylistScanAsyncTask(getApplicationContext());
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<File>> loader, List<File> data) {
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<File>> loader) {
+
     }
 }
