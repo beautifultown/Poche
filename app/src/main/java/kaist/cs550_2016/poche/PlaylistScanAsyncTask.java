@@ -3,6 +3,7 @@ package kaist.cs550_2016.poche;
 import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -40,6 +41,8 @@ public class PlaylistScanAsyncTask extends AsyncTaskLoader<List<File>> {
 
     private void scan(File directory) {
         File[] files = directory.listFiles(filenameFilter);
+        if (files == null) return;
+
         for (File file : files) {
             if (file.isDirectory()) scan(file);
             else result.add(file);

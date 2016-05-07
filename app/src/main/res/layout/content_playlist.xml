@@ -13,15 +13,9 @@
     tools:context="kaist.cs550_2016.poche.PlaylistActivity"
     tools:showIn="@layout/activity_playlist">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:layout_marginBottom="8dp"/>
-
     <ListView
-        android:id="@+id/playlist_list"
+        android:id="@+id/playlist_List"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"/>
 
 </LinearLayout>
