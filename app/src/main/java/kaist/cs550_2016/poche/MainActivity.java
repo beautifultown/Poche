@@ -7,8 +7,11 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventListener {
 
+    private Playlist playlist;
     private GestureDetector gestureDetector;
 
     @Override
@@ -18,6 +21,13 @@ public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventLis
 
         Uri playlistUri = getIntent().getData();
         Toast.makeText(this, "Loaded: " + playlistUri.toString(), Toast.LENGTH_LONG).show();
+
+        try {
+            playlist = Playlist.parse(this, getIntent().getData());
+            playlist.GetCurrentTrack();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         BSUI bsui = new BSUI();
         bsui.setBSUIEventListener(this);
@@ -40,12 +50,19 @@ public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventLis
                 break;
             case STROKE_DOWN:
                 // TODO Volume down
+                // Temporarily testing randomTrack thing here
+                playlist.GetRandomTrack();
+                playlist.GetCurrentTrack();
                 break;
             case STROKE_LEFT:
                 // TODO Prev track
+                playlist.PrevTrack();
+                playlist.GetCurrentTrack();
                 break;
             case STROKE_RIGHT:
                 // TODO Next track
+                playlist.NextTrack();
+                playlist.GetCurrentTrack();
                 break;
         }
     }

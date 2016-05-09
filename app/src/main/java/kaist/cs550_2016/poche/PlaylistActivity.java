@@ -39,7 +39,7 @@ public class PlaylistActivity extends AppCompatActivity
         playlistListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                PlayTrack(view.getTag().toString());
+                PlayTrack(view.getTag());
             }
         });
 
@@ -105,7 +105,7 @@ public class PlaylistActivity extends AppCompatActivity
             TextView playlistTextView = ViewHolder.get(convertView, R.id.playlist_ListItem);
 
             playlistTextView.setText(filename);
-            playlistTextView.setTag(playlistFile.getPath());
+            playlistTextView.setTag(playlistFile);
 
             return convertView;
         }
@@ -117,9 +117,14 @@ public class PlaylistActivity extends AppCompatActivity
                 ProgressDialog.show(this, "Please wait", "Scanning playlist files...");
     }
 
-    private void PlayTrack(String path) {
+    private void PlayTrack(Object track) {
         Intent intent = new Intent(PlaylistActivity.this, MainActivity.class);
-        intent.setData(Uri.parse("file://" + path));
+        if (track instanceof File) {
+            intent.setData(Uri.fromFile((File)track));
+        }
+        else {
+            intent.setData(Uri.parse(track.toString()));
+        }
         startActivity(intent);
     }
 }
