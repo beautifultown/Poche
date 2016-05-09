@@ -105,7 +105,6 @@ public class ConfigActivity extends AppCompatPreferenceActivity {
     protected void onPause() {
         super.onPause();
         ConfigHelper.getInstance().syncPreferences();
-        Log.w("Config", "Sync!");
     }
 
     /**

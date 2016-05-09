@@ -1,10 +1,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ListPreference
-        android:key="SWIPEDIRECTION"
-        android:title="@string/pref_swipedirection"
-        android:entries="@array/pref_swipedirection_summary"
-        android:entryValues="@array/pref_swipedirection_values"
+        android:key="STROKEORIENTATION"
+        android:title="@string/pref_strokeorientation"
+        android:entries="@array/pref_strokeorientation_summary"
+        android:entryValues="@array/pref_strokeorientation_values"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"/>
 

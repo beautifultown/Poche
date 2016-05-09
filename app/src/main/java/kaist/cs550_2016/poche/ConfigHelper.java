@@ -25,29 +25,15 @@ import java.util.Arrays;
 public class ConfigHelper {
 
     private static final String
-            KEY_SWIPEDIRECTION = "SWIPEDIRECTION",
+            KEY_STROKEORIENTATION = "STROKEORIENTATION",
             KEY_WAKELOCK = "WAKELOCK";
-
-    /**
-     * Swipe direction - Left swipe means left; Right swipe means right.
-     */
-    public static final String SWIPEDIRECTION_NORMAL = "Normal";
-    /**
-     * Swipe direction - Left swipe means right; Right swipe means left.
-     */
-    public static final String SWIPEDIRECTION_REVERSED = "Reversed";
-
-    private static final String[] SWIPEDIRECTION_ALL = {
-            SWIPEDIRECTION_NORMAL,
-            SWIPEDIRECTION_REVERSED
-    };
 
     /**
      * All of key lists used for {@link SharedPreferences}.<br>
      * Mainly used for iterating over all configurations.
      */
     public static final String[] KEY_ALL_CONFIGS = {
-            KEY_SWIPEDIRECTION,
+            KEY_STROKEORIENTATION,
             KEY_WAKELOCK
     };
 
@@ -92,42 +78,71 @@ public class ConfigHelper {
      * This also fills default value if there is no configuration.
      */
     public void syncPreferences() {
-        swipeDirection = null;
-        getSwipeDirection();
+        strokeOrientation = null;
+        getStrokeOrientation();
 
         isWakeLockEnabled = null;
-        isWakeLockEnabled();
+        isWakeLock();
     }
 
-    // Swipe direction
-    private static String swipeDirection;
+    // Stroke orientation
+    public enum StrokeOrientation {
+        /**
+         * Stroke orientation - Left stroke means left; Right stroke means right.
+         */
+        NORMAL("Normal"),
+        /**
+         * Stroke orientation - Left stroke means right; Right stroke means left.
+         */
+        REVERSED("Reversed");
+
+        private String name;
+
+        StrokeOrientation(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public static StrokeOrientation fromName(String name) {
+            if (name != null) {
+                for (StrokeOrientation value : StrokeOrientation.values()) {
+                    if (name.equalsIgnoreCase(value.name)) {
+                        return value;
+                    }
+                }
+            }
+            throw new IllegalArgumentException("No constant with text " + name + " found");
+        }
+    }
+
+    private static StrokeOrientation strokeOrientation;
 
     /**
-     * Get swipe direction mode.
-     * @return One of swipe direction mode.<br>
-     *          {@link ConfigHelper#SWIPEDIRECTION_NORMAL},<br>
-     *          {@link ConfigHelper#SWIPEDIRECTION_REVERSED}.
+     * Get stroke orientation mode.
+     * @return One of stroke orientation mode.<br>
+     *          See {@link StrokeOrientation}
      */
-    public String getSwipeDirection() {
-        if (swipeDirection == null) {
-            swipeDirection = preferences.getString(KEY_SWIPEDIRECTION, SWIPEDIRECTION_NORMAL);
-            setSwipeDirection(swipeDirection);
+    public StrokeOrientation getStrokeOrientation() {
+        if (strokeOrientation == null) {
+            String modeString = preferences.getString(KEY_STROKEORIENTATION,
+                    StrokeOrientation.NORMAL.getName());
+            strokeOrientation = StrokeOrientation.fromName(modeString);
+            setStrokeOrientation(strokeOrientation);
         }
-        return swipeDirection;
+        return strokeOrientation;
     }
 
     /**
-     * Set swipe direction mode.
-     * @param direction One of swipe direction mode.<br>
-     *          {@link ConfigHelper#SWIPEDIRECTION_NORMAL},<br>
-     *          {@link ConfigHelper#SWIPEDIRECTION_REVERSED}<br>
-     *          Other values will be ignored.
+     * Set stroke orientation mode.
+     * @param orientation One of stroke orientation mode.<br>
+     *          See {@link StrokeOrientation}
      */
-    public void setSwipeDirection(String direction) {
-        if (Arrays.asList(SWIPEDIRECTION_ALL).contains(direction)) {
-            editor.putString(KEY_SWIPEDIRECTION, direction).commit();
-            swipeDirection = direction;
-        }
+    public void setStrokeOrientation(StrokeOrientation orientation) {
+        editor.putString(KEY_STROKEORIENTATION, orientation.getName()).commit();
+        strokeOrientation = orientation;
     }
 
     // Wake lock
@@ -137,10 +152,10 @@ public class ConfigHelper {
      * Checks whether <i>Wake lock</i> is enabled.
      * @return true if <i>Wake lock</i> is enabled, false otherwise.
      */
-    public boolean isWakeLockEnabled() {
+    public boolean isWakeLock() {
         if (isWakeLockEnabled == null) {
             isWakeLockEnabled = preferences.getBoolean(KEY_WAKELOCK, false);
-            setWakeLockEnabled(isWakeLockEnabled);
+            setWakeLock(isWakeLockEnabled);
         }
 
         return isWakeLockEnabled;
@@ -150,7 +165,7 @@ public class ConfigHelper {
      * Set whether to use <i>Wake lock</i>.
      * @param isEnabled true to enable, false otherwise.
      */
-    public void setWakeLockEnabled(boolean isEnabled) {
+    public void setWakeLock(boolean isEnabled) {
         editor.putBoolean(KEY_WAKELOCK, isEnabled).commit();
         isWakeLockEnabled = isEnabled;
     }
