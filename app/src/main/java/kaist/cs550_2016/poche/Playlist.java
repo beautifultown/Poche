@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 // For parse method part:
 /*
@@ -46,35 +47,55 @@ public class Playlist {
 
         int lastSeperatorPos = uri.toString().lastIndexOf(File.separator) + 1;
         path = uri.toString().substring(0, lastSeperatorPos);
+
+        if (ConfigHelper.getInstance().getPlayOrder() == ConfigHelper.PlayOrder.SHUFFLE) {
+            currentTrackIndex = new Random().nextInt(playlist.size());
+        }
     }
 
     public Uri GetCurrentTrack() {
-        Log.w("CurrentTrack", Uri.parse(path + playlist.get(currentTrackIndex).path).toString());
+        Log.w("CurrentTrack", "Current track #: " + playlist.get(currentTrackIndex).trackNumber);
         return Uri.parse(path + playlist.get(currentTrackIndex).path);
     }
 
     public void NextTrack() {
-        currentTrackIndex = (currentTrackIndex + 1) % playlist.size();
+        switch (ConfigHelper.getInstance().getPlayOrder()) {
+            case ORDERED:
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.size();
+                break;
+            case SHUFFLE:
+                int currentRandomTrackIndex =
+                        randomPlaylist.indexOf(playlist.get(currentTrackIndex));
+                int nextRandomTrackIndex = (currentRandomTrackIndex + 1) % playlist.size();
+                currentTrackIndex = playlist.indexOf(randomPlaylist.get(nextRandomTrackIndex));
+                break;
+        }
     }
 
     public void PrevTrack() {
-        currentTrackIndex = (currentTrackIndex + playlist.size() - 1) % playlist.size();
-    }
-
-    public void GetRandomTrack() {
-        int currentRandomTrackIndex = randomPlaylist.indexOf(playlist.get(currentTrackIndex));
-        int nextRandomTrackIndex = (currentRandomTrackIndex + 1) % playlist.size();
-        currentTrackIndex = playlist.indexOf(randomPlaylist.get(nextRandomTrackIndex));
+        switch (ConfigHelper.getInstance().getPlayOrder()) {
+            case ORDERED:
+                currentTrackIndex = (currentTrackIndex + playlist.size() - 1) % playlist.size();
+                break;
+            case SHUFFLE:
+                int currentRandomTrackIndex =
+                        randomPlaylist.indexOf(playlist.get(currentTrackIndex));
+                int nextRandomTrackIndex =
+                        (currentRandomTrackIndex + playlist.size() - 1) % playlist.size();
+                currentTrackIndex = playlist.indexOf(randomPlaylist.get(nextRandomTrackIndex));
+                break;
+        }
     }
 
     private static class Entry {
         public final String path;
         public final String metadata;
+        public final int trackNumber;
 
-        public Entry(String path, String metadata) {
+        public Entry(String path, String metadata, int trackNumber) {
             this.path = path;
             this.metadata = metadata;
-            Log.w("PlaylistEntry", "Path: " + path + ", meta: " + metadata);
+            this.trackNumber = trackNumber;
         }
     }
 
@@ -89,6 +110,7 @@ public class Playlist {
 
         String line;
         String metadata = null, path = null;
+        int trackNumber = 0;
         List<Entry> playlist = new ArrayList<>();
 
         while ((line = reader.readLine()) != null) {
@@ -97,7 +119,7 @@ public class Playlist {
                     metadata = line.replaceAll("^(.*?),", "");
                 } else {
                     path = Uri.encode(line.trim());
-                    playlist.add(new Entry(path, metadata));
+                    playlist.add(new Entry(path, metadata, ++trackNumber));
                 }
             }
         }

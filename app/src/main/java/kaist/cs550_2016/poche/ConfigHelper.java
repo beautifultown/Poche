@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import java.util.Arrays;
-
 /**
  * Created by Leegeun Ha.
  */
@@ -16,7 +14,7 @@ import java.util.Arrays;
  *
  * Developers Note: Steps to add a new configuration item<br>
  * 1. Add Key name used in {@link SharedPreferences}, in private static final String.<br>
- * 2. Add a string created in step 1. to {@link ConfigHelper#KEY_ALL_CONFIGS}.<br>
+ * 2. Add a string created in step 1. to {@link ConfigHelper#KEY_ALL_CONFIGS_IN_CONFIGACTIVITY}.<br>
  * 3. Declare a variable to maintain configuration value, in private static [TYPE] form.<br>
  * 4. If there is no initial value for decleared variable in step 3,<br> create getter method
  *    get[VARIABLE NAME] that retrieves persistent configuration from {@link SharedPreferences}.<br>
@@ -26,13 +24,14 @@ public class ConfigHelper {
 
     private static final String
             KEY_STROKEORIENTATION = "STROKEORIENTATION",
-            KEY_WAKELOCK = "WAKELOCK";
+            KEY_WAKELOCK = "WAKELOCK",
+            KEY_PLAYORDER = "PLAYORDER";
 
     /**
      * All of key lists used for {@link SharedPreferences}.<br>
-     * Mainly used for iterating over all configurations.
+     * Mainly used for iterating items in {@link ConfigActivity}
      */
-    public static final String[] KEY_ALL_CONFIGS = {
+    public static final String[] KEY_ALL_CONFIGS_IN_CONFIGACTIVITY = {
             KEY_STROKEORIENTATION,
             KEY_WAKELOCK
     };
@@ -83,6 +82,9 @@ public class ConfigHelper {
 
         isWakeLockEnabled = null;
         isWakeLock();
+
+        playOrder = null;
+        getPlayOrder();
     }
 
     // Stroke orientation
@@ -105,6 +107,9 @@ public class ConfigHelper {
         public String getName() {
             return this.name;
         }
+        public String toString() {
+            return this.name;
+        }
 
         public static StrokeOrientation fromName(String name) {
             if (name != null) {
@@ -118,7 +123,7 @@ public class ConfigHelper {
         }
     }
 
-    private static StrokeOrientation strokeOrientation;
+    private StrokeOrientation strokeOrientation;
 
     /**
      * Get stroke orientation mode.
@@ -146,7 +151,7 @@ public class ConfigHelper {
     }
 
     // Wake lock
-    private static Boolean isWakeLockEnabled;
+    private Boolean isWakeLockEnabled;
 
     /**
      * Checks whether <i>Wake lock</i> is enabled.
@@ -170,4 +175,42 @@ public class ConfigHelper {
         isWakeLockEnabled = isEnabled;
     }
 
+    // Play order mode
+    public enum PlayOrder {
+        /**
+         * Play order - Sequential order defined by playlist.
+         */
+        ORDERED,
+        /**
+         * Play order - Random order defined differently every loading.
+         */
+        SHUFFLE
+    }
+
+    private PlayOrder playOrder;
+
+    /**
+     * Get play order mode.
+     * @return One of play order mode.<br>
+     *          See {@link PlayOrder}
+     */
+    public PlayOrder getPlayOrder() {
+        if (playOrder == null) {
+            String modeString = preferences.getString(KEY_PLAYORDER,
+                    PlayOrder.ORDERED.toString());
+            playOrder = PlayOrder.valueOf(modeString);
+            setPlayOrder(playOrder);
+        }
+        return playOrder;
+    }
+
+    /**
+     * Set play order mode.
+     * @param playOrder One of play order mode.<br>
+     *          See {@link PlayOrder}
+     */
+    public void setPlayOrder(PlayOrder playOrder) {
+        editor.putString(KEY_PLAYORDER, playOrder.toString()).commit();
+        this.playOrder = playOrder;
+    }
 }

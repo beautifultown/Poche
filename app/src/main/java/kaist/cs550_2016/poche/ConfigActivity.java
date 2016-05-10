@@ -13,7 +13,6 @@ import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
-import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
@@ -159,7 +158,7 @@ public class ConfigActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            for (String config : ConfigHelper.getInstance().KEY_ALL_CONFIGS) {
+            for (String config : ConfigHelper.getInstance().KEY_ALL_CONFIGS_IN_CONFIGACTIVITY) {
                 bindPreferenceSummaryToValue(findPreference(config));
             }
         }

@@ -45,24 +45,28 @@ public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventLis
     public void onBSUIEvent(BSUI.BSUIEvent event) {
         Toast.makeText(this, "BSUI event: " + event, Toast.LENGTH_LONG).show();
         switch (event) {
+            case SINGLE_TAP:
+                // TODO Pause/Play
+                break;
             case STROKE_UP:
                 // TODO Volume up
                 break;
             case STROKE_DOWN:
                 // TODO Volume down
-                // Temporarily testing randomTrack thing here
-                playlist.GetRandomTrack();
-                playlist.GetCurrentTrack();
                 break;
             case STROKE_LEFT:
-                // TODO Prev track
                 playlist.PrevTrack();
                 playlist.GetCurrentTrack();
                 break;
             case STROKE_RIGHT:
-                // TODO Next track
                 playlist.NextTrack();
                 playlist.GetCurrentTrack();
+                break;
+            case STROKE_DOUBLEUP:
+                ConfigHelper.getInstance().setPlayOrder(ConfigHelper.PlayOrder.ORDERED);
+                break;
+            case STROKE_DOUBLEDOWN:
+                ConfigHelper.getInstance().setPlayOrder(ConfigHelper.PlayOrder.SHUFFLE);
                 break;
         }
     }
