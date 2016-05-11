@@ -2,7 +2,9 @@ package kaist.cs550_2016.poche;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FilenameFilter;

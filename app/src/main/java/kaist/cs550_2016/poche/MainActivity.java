@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -37,7 +39,17 @@ public class MainActivity extends AppCompatActivity
         BSUI bsui = new BSUI();
         bsui.setBSUIEventListener(this);
         gestureDetector = new GestureDetector(this, bsui);
+
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        if (ConfigHelper.getInstance().isWakeLock()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
+
+
 
     @Override
     protected void onDestroy() {
