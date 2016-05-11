@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,7 +27,7 @@ public class PlaylistActivity extends AppCompatActivity
 
     private ListView playlistListView;
     private ArrayAdapter<?> listViewAdapter;
-    private ProgressDialog scanningProgressDialog;
+    private List<File> playlistFiles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +40,10 @@ public class PlaylistActivity extends AppCompatActivity
         playlistListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                PlayTrack(view.getTag());
+                PlayTrack(playlistFiles.get(position));
             }
         });
+        playlistListView.setEmptyView(findViewById(R.id.playlist_TextNoItem));
 
         GetPlayList();
     }
@@ -79,7 +81,7 @@ public class PlaylistActivity extends AppCompatActivity
     public void onLoadFinished(Loader<List<File>> loader, List<File> data) {
         listViewAdapter = new PlaylistAdapter(this, R.layout.activity_playlist_list_item, data);
         playlistListView.setAdapter(listViewAdapter);
-        scanningProgressDialog.dismiss();
+        playlistFiles = data;
     }
 
     @Override
@@ -100,12 +102,10 @@ public class PlaylistActivity extends AppCompatActivity
             }
 
             File playlistFile = getItem(position);
-            String filename = playlistFile.getParentFile().getName() +
-                    "/" + playlistFile.getName();
+            String filename = playlistFile.getName();
             TextView playlistTextView = ViewHolder.get(convertView, R.id.playlist_ListItem);
 
             playlistTextView.setText(filename);
-            playlistTextView.setTag(playlistFile);
 
             return convertView;
         }
@@ -113,8 +113,6 @@ public class PlaylistActivity extends AppCompatActivity
 
     private void GetPlayList() {
         getLoaderManager().initLoader(0, null, this);
-        scanningProgressDialog =
-                ProgressDialog.show(this, "Please wait", "Scanning playlist files...");
     }
 
     private void PlayTrack(Object track) {

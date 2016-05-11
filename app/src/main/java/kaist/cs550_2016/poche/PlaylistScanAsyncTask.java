@@ -31,8 +31,12 @@ public class PlaylistScanAsyncTask extends AsyncTaskLoader<List<File>> {
     @Override
     public List<File> loadInBackground() {
         String rootPath = Environment.getExternalStorageDirectory().getPath();
+        rootPath += File.separator + "Poche";
+
         File rootDirectory = new File(rootPath);
-        if (!rootDirectory.exists() || !rootDirectory.isDirectory()) return null;
+        if (!rootDirectory.exists()) {
+            if (!rootDirectory.mkdir()) return null;
+        }
 
         scan(rootDirectory);
         return result;

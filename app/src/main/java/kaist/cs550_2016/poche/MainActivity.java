@@ -1,5 +1,8 @@
 package kaist.cs550_2016.poche;
 
+import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,10 +12,12 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventListener {
+public class MainActivity extends AppCompatActivity
+        implements BSUI.BSUIEventListener, MediaPlayer.OnCompletionListener {
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,8 +28,8 @@ public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventLis
         Toast.makeText(this, "Loaded: " + playlistUri.toString(), Toast.LENGTH_LONG).show();
 
         try {
-            playlist = Playlist.parse(this, getIntent().getData());
-            playlist.GetCurrentTrack();
+            playlist = Playlist.parse(this, playlistUri);
+            PlayTrack();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -32,6 +37,14 @@ public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventLis
         BSUI bsui = new BSUI();
         bsui.setBSUIEventListener(this);
         gestureDetector = new GestureDetector(this, bsui);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
     }
 
     // TouchListener()
@@ -43,31 +56,83 @@ public class MainActivity extends AppCompatActivity implements BSUI.BSUIEventLis
 
     @Override
     public void onBSUIEvent(BSUI.BSUIEvent event) {
-        Toast.makeText(this, "BSUI event: " + event, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "BSUI event: " + event, Toast.LENGTH_SHORT).show();
         switch (event) {
             case SINGLE_TAP:
-                // TODO Pause/Play
+                pauseResume();
                 break;
             case STROKE_UP:
-                // TODO Volume up
+                adjustVolume(AudioManager.ADJUST_RAISE);
                 break;
             case STROKE_DOWN:
-                // TODO Volume down
+                adjustVolume(AudioManager.ADJUST_LOWER);
                 break;
             case STROKE_LEFT:
-                playlist.PrevTrack();
-                playlist.GetCurrentTrack();
+                PrevTrack();
                 break;
             case STROKE_RIGHT:
-                playlist.NextTrack();
-                playlist.GetCurrentTrack();
+                NextTrack();
                 break;
             case STROKE_DOUBLEUP:
-                ConfigHelper.getInstance().setPlayOrder(ConfigHelper.PlayOrder.ORDERED);
+                SetPlayMode(ConfigHelper.PlayOrder.ORDERED);
                 break;
             case STROKE_DOUBLEDOWN:
-                ConfigHelper.getInstance().setPlayOrder(ConfigHelper.PlayOrder.SHUFFLE);
+                SetPlayMode(ConfigHelper.PlayOrder.SHUFFLE);
                 break;
         }
+    }
+
+    public void PlayTrack() {
+        Uri currentTrack = playlist.GetCurrentTrack();
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer.create(this, currentTrack);
+            mediaPlayer.setOnCompletionListener(this);
+        }
+        else {
+            mediaPlayer.reset();
+            try {
+                mediaPlayer.setDataSource(this, currentTrack);
+                mediaPlayer.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        mediaPlayer.start();
+    }
+
+    private void pauseResume() {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+            }
+            else {
+                mediaPlayer.start();
+            }
+        }
+    }
+
+    private void NextTrack() {
+        playlist.NextTrack();
+        PlayTrack();
+    }
+
+    private void PrevTrack() {
+        playlist.PrevTrack();
+        PlayTrack();
+    }
+
+    private void adjustVolume(int volumeAdjustCommand) {
+        AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                volumeAdjustCommand, AudioManager.FLAG_SHOW_UI);
+    }
+
+    private void SetPlayMode(ConfigHelper.PlayOrder playOrder) {
+        ConfigHelper.getInstance().setPlayOrder(playOrder);
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        NextTrack();
     }
 }

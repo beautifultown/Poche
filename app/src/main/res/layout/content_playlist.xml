@@ -13,6 +13,16 @@
     tools:context="kaist.cs550_2016.poche.PlaylistActivity"
     tools:showIn="@layout/activity_playlist">
 
+    <TextView
+        android:id="@+id/playlist_TextNoItem"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+
+        android:text="@string/no_playlist"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+
+        android:gravity="center"/>
+
     <ListView
         android:id="@+id/playlist_List"
         android:layout_width="match_parent"
