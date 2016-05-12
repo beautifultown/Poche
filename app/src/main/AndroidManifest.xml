@@ -15,7 +15,8 @@
             android:name=".PlaylistActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -24,14 +25,20 @@
         <activity
             android:name=".ConfigActivity"
             android:label="@string/title_activity_config"
-            android:parentActivityName=".PlaylistActivity">
+            android:parentActivityName=".PlaylistActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="kaist.cs550_2016.poche.PlaylistActivity" />
         </activity>
         <activity
             android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="kaist.cs550_2016.poche.PlaylistActivity" />
         </activity>
     </application>
 

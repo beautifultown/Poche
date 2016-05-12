@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity
     private Playlist playlist;
     private GestureDetector gestureDetector;
     private MediaPlayer mediaPlayer;
+    private boolean isPlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity
 
         try {
             playlist = Playlist.parse(this, playlistUri);
+            isPlaying = true;
             PlayTrack();
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,7 +98,6 @@ public class MainActivity extends AppCompatActivity
 
     public void PlayTrack() {
         Uri currentTrack = playlist.GetCurrentTrack();
-        Boolean mediaPlayerWasPlaying = null;
 
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer.create(this, currentTrack);
@@ -104,7 +105,6 @@ public class MainActivity extends AppCompatActivity
         }
         else {
             mediaPlayer.reset();
-            mediaPlayerWasPlaying = mediaPlayer.isPlaying();
             try {
                 mediaPlayer.setDataSource(this, currentTrack);
                 mediaPlayer.prepare();
@@ -113,19 +113,20 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        if (mediaPlayerWasPlaying == null || mediaPlayerWasPlaying) {
+        if (isPlaying) {
             mediaPlayer.start();
         }
     }
 
     private void pauseResume() {
         if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
+            if (isPlaying) {
                 mediaPlayer.pause();
             }
             else {
                 mediaPlayer.start();
             }
+            isPlaying = !isPlaying;
         }
     }
 
