@@ -96,12 +96,15 @@ public class MainActivity extends AppCompatActivity
 
     public void PlayTrack() {
         Uri currentTrack = playlist.GetCurrentTrack();
+        Boolean mediaPlayerWasPlaying = null;
+
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer.create(this, currentTrack);
             mediaPlayer.setOnCompletionListener(this);
         }
         else {
             mediaPlayer.reset();
+            mediaPlayerWasPlaying = mediaPlayer.isPlaying();
             try {
                 mediaPlayer.setDataSource(this, currentTrack);
                 mediaPlayer.prepare();
@@ -109,7 +112,10 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
         }
-        mediaPlayer.start();
+
+        if (mediaPlayerWasPlaying == null || mediaPlayerWasPlaying) {
+            mediaPlayer.start();
+        }
     }
 
     private void pauseResume() {
