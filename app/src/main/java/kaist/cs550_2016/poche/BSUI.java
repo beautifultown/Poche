@@ -71,7 +71,8 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         }
     }
 
-    private BSUIEvent applyConfiguration(BSUIEvent event, BSUIEvent adjustedEvent, ConfigHelper.StrokeOrientation orientation) {
+    private BSUIEvent applyConfiguration(BSUIEvent event, BSUIEvent adjustedEvent,
+                                         ConfigHelper.StrokeOrientation orientation) {
         if (orientation == ConfigHelper.StrokeOrientation.REVERSED) {
             switch (event) {
                 case STROKE_LEFT:
@@ -98,6 +99,9 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
                     previousEvent = adjustedEvent;
                     adjustedEvent = null;
                 }
+                break;
+            default:
+                previousEvent = null;
                 break;
         }
 
@@ -139,8 +143,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
                     break;
             }
             return null;
-        }
-    }
+        }    }
 
     public interface BSUIEventListener {
         public void onBSUIEvent(BSUIEvent event);
