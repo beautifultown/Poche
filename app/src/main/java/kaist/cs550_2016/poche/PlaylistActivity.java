@@ -82,6 +82,7 @@ public class PlaylistActivity extends AppCompatActivity
         listViewAdapter = new PlaylistAdapter(this, R.layout.activity_playlist_list_item, data);
         playlistListView.setAdapter(listViewAdapter);
         playlistFiles = data;
+        Debug.toastStopwatch("GetPlaylist()");
     }
 
     @Override
@@ -98,7 +99,8 @@ public class PlaylistActivity extends AppCompatActivity
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = getLayoutInflater().inflate(R.layout.activity_playlist_list_item, null);
+                convertView =
+                        getLayoutInflater().inflate(R.layout.activity_playlist_list_item, null);
             }
 
             File playlistFile = getItem(position);
@@ -112,6 +114,7 @@ public class PlaylistActivity extends AppCompatActivity
     }
 
     private void GetPlayList() {
+        Debug.stopwatchStart();
         getLoaderManager().initLoader(0, null, this);
     }
 

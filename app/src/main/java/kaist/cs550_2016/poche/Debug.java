@@ -28,7 +28,7 @@ public class Debug {
     }
 
     /**
-     * Wrapper for showing toast in debug mode.
+     * Wrapper for showing {@link Toast} in debug mode.
      * @param message message to be printed in log
      * @param duration time length to be shown (See {@link Toast})
      */
@@ -68,5 +68,16 @@ public class Debug {
 
         long now = System.currentTimeMillis();
         return (now - start) / 1000.0;
+    }
+
+    /**
+     * Utility function for showing stopwatch value in {@link Toast}.<br>
+     * Format: [[task]] + finished in [[time]] s.
+     * @param task name for task showing in message.
+     */
+    public static void toastStopwatch(String task) {
+        if (!isDebug) return;
+
+        Debug.toast(task + " finished in " + Debug.stopwatchEnd() + " s.");
     }
 }

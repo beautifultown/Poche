@@ -27,10 +27,14 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         Uri playlistUri = getIntent().getData();
-        Debug.toast("Loaded: " + playlistUri.toString());
+        Debug.log(this, "Playlist loaded: " + playlistUri.toString());
 
         try {
+
+            Debug.stopwatchStart();
             playlist = Playlist.parse(this, playlistUri);
+            Debug.toastStopwatch("Parse()");
+
             isPlaying = true;
             PlayTrack();
         } catch (IOException e) {
@@ -50,8 +54,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -69,7 +71,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBSUIEvent(BSUI.BSUIEvent event) {
-        Debug.toast("BSUI event: " + event);
+        Debug.log(this, "BSUI event: " + event);
         switch (event) {
             case SINGLE_TAP:
                 pauseResume();

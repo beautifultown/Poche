@@ -15,7 +15,7 @@ import java.util.TimerTask;
 
 public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
-    private static final long DELAY_BETWEEN_DOUBLE_STROKE_MS = 500;
+    private static final long DELAY_BETWEEN_DOUBLE_STROKE_MS = 480;
 
     private BSUIEvent previousEvent;
     private BSUIEventListener bsuiEventListener;
@@ -56,6 +56,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
     private void fireEvent(BSUIEvent event) {
         if (bsuiEventListener == null) return;
+        if (previousEvent == null) Debug.stopwatchStart();
 
         BSUIEvent adjustedEvent = event;
         ConfigHelper.StrokeOrientation orientation =
@@ -66,6 +67,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
         if (adjustedEvent != null) {
             bsuiEventListener.onBSUIEvent(adjustedEvent);
+            Debug.toastStopwatch("ParseTouchEvent()");
         }
     }
 
@@ -111,6 +113,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
                     case STROKE_UP:
                     case STROKE_DOWN:
                         bsuiEventListener.onBSUIEvent(previousEvent);
+                        Debug.toastStopwatch("ParseTouchEvent()");
                         break;
                 }
                 previousEvent = null;
