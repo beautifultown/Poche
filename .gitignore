@@ -40,3 +40,6 @@ proguard/
 
 # Android Studio captures folder
 captures/
+
+# JDK version difference causes merge conflict
+.idea/misc.xml
