@@ -38,8 +38,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         if (speedX > speedY) {
             if (e1.getX() < e2.getX()) {
                 fireEvent(BSUIEvent.STROKE_RIGHT);
-            }
-            else if (e1.getX() > e2.getX()) {
+            } else if (e1.getX() > e2.getX()) {
                 fireEvent(BSUIEvent.STROKE_LEFT);
             }
         }
@@ -47,8 +46,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         if (speedX < speedY) {
             if (e1.getY() < e2.getY()) {
                 fireEvent(BSUIEvent.STROKE_DOWN);
-            }
-            else if (e1.getY() > e2.getY()) {
+            } else if (e1.getY() > e2.getY()) {
                 fireEvent(BSUIEvent.STROKE_UP);
             }
         }
@@ -94,8 +92,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
                 if (previousEvent == event) {
                     adjustedEvent = BSUIEvent.getDoubledStroke(event);
                     previousEvent = null;
-                }
-                else {
+                } else {
                     previousEvent = adjustedEvent;
                     adjustedEvent = null;
                 }
@@ -143,7 +140,8 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
                     break;
             }
             return null;
-        }    }
+        }
+    }
 
     public interface BSUIEventListener {
         public void onBSUIEvent(BSUIEvent event);

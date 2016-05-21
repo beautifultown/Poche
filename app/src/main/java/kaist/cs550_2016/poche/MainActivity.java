@@ -10,7 +10,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import java.io.IOException;
 
@@ -28,7 +27,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         Uri playlistUri = getIntent().getData();
-        Toast.makeText(this, "Loaded: " + playlistUri.toString(), Toast.LENGTH_LONG).show();
+        Debug.toast("Loaded: " + playlistUri.toString());
 
         try {
             playlist = Playlist.parse(this, playlistUri);
@@ -70,7 +69,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBSUIEvent(BSUI.BSUIEvent event) {
-        Toast.makeText(this, "BSUI event: " + event, Toast.LENGTH_SHORT).show();
+        Debug.toast("BSUI event: " + event);
         switch (event) {
             case SINGLE_TAP:
                 pauseResume();

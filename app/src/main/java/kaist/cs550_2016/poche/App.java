@@ -22,7 +22,7 @@ public class App extends Application {
 
     /**
      * Returns this app's context.<br>
-     * !! Warning: DO NOT USE this for creating Views, Toasts, Dialogs, <br>
+     * !! Warning: DO NOT USE this for creating Views, Dialogs, <br>
      *             such that stuffs bound to a single Activity.<br>
      * !! Use mainly for parsing XML, get resources, access files, etc.<br>
      * @return Application context (=getApplicationContext())
