@@ -46,7 +46,11 @@ public class PlaylistScanAsyncTask extends AsyncTaskLoader<List<File>> {
 
     private void scan(File directory) {
         File[] files = directory.listFiles(filenameFilter);
-        if (files == null) return;
+        if (files == null)
+        {
+            Debug.log("No playlist found");
+            return;
+        }
 
         for (File file : files) {
             if (file.isDirectory()) scan(file);
@@ -58,8 +62,8 @@ public class PlaylistScanAsyncTask extends AsyncTaskLoader<List<File>> {
 
         @Override
         public boolean accept(File dir, String filename) {
-            if (filename.endsWith(".m3u") || filename.endsWith(".m3u8")
-                    || filename.endsWith(".M3U") || filename.endsWith(".M3U8")) {
+            Debug.log(dir.getAbsolutePath());
+            if (filename.toLowerCase().endsWith(".m3u") || filename.toLowerCase().endsWith(".m3u8")) {
                 return true;
             }
             else if (new File(dir.getAbsolutePath() + "/" + filename).isDirectory()) {

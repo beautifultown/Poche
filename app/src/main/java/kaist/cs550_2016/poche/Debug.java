@@ -28,7 +28,16 @@ public class Debug {
     }
 
     /**
-     * Wrapper for showing {@link Toast} in debug mode.
+     * For the lazy
+     * @param message
+     */
+    public static void log(String message) {
+        if (!isDebug) return;
+        Log.w("via Debug.java: ", message);
+    }
+
+    /**
+     * Wrapper for showing toast in debug mode.
      * @param message message to be printed in log
      * @param duration time length to be shown (See {@link Toast})
      */
