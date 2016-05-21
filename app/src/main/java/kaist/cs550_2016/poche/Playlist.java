@@ -54,7 +54,7 @@ public class Playlist {
     }
 
     public Uri GetCurrentTrack() {
-        Debug.log(this, "Current track #: " + playlist.get(currentTrackIndex).trackNumber);
+        Debug.log("CurrentTrack", "Current track #: " + playlist.get(currentTrackIndex).trackNumber);
         return Uri.parse(path + playlist.get(currentTrackIndex).path);
     }
 

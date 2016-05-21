@@ -4,10 +4,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -18,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import junit.framework.Assert;
+import android.widget.Toast;
 
 import java.io.IOException;
 
@@ -32,8 +36,7 @@ public class MainActivity extends AppCompatActivity
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
-    private MediaPlayer mediaPlayer;
-    private boolean isPlaying;
+    private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +44,22 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         Uri playlistUri = getIntent().getData();
-        Debug.toast("Loaded: " + playlistUri.toString());
+        Debug.log(this, "Playlist loaded: " + playlistUri.toString());
 
         try {
+            Debug.stopwatchStart();
             playlist = Playlist.parse(this, playlistUri);
-            isPlaying = true;
-            PlayTrack();
+            Debug.toastStopwatch("Parse()");
+
         } catch (IOException e) {
+            Toast.makeText(this, R.string.toast_fail_parseplaylist, Toast.LENGTH_LONG).show();
             e.printStackTrace();
+            finish();
         }
+
+        bindService(new Intent(getBaseContext(), MediaPlayerService.class),
+                connection, BIND_AUTO_CREATE);
+        // Start media playback in onServiceConnected
 
         BSUI bsui = new BSUI();
         bsui.setBSUIEventListener(this);
@@ -75,13 +85,26 @@ public class MainActivity extends AppCompatActivity
         albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumart);
     }
 
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mediaPlayerServiceBinder = ((MediaPlayerService.MediaPlayerServiceBinder) service);
+            mediaPlayerServiceBinder.initialize(MainActivity.this);
+            PlayTrack();
+        }
 
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // Nothing to do
+        }
+    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
+        if (mediaPlayerServiceBinder != null) {
+            unbindService(connection);
+            mediaPlayerServiceBinder = null;
         }
     }
 
@@ -94,7 +117,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBSUIEvent(BSUI.BSUIEvent event) {
-        Debug.toast("BSUI event: " + event);
+        Debug.log(this, "BSUI event: " + event);
         switch (event) {
             case SINGLE_TAP:
                 pauseResume();
@@ -121,38 +144,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void PlayTrack() {
+        if (mediaPlayerServiceBinder == null) return;
+
         Uri fileURI = playlist.GetCurrentTrack();
+        mediaPlayerServiceBinder.setTrack(fileURI);
         updateMetadata(fileURI);
-
-        if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer.create(this, fileURI);
-            mediaPlayer.setOnCompletionListener(this);
-        }
-        else {
-            mediaPlayer.reset();
-            try {
-                mediaPlayer.setDataSource(this, fileURI);
-                mediaPlayer.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (isPlaying) {
-            mediaPlayer.start();
-        }
     }
 
     private void pauseResume() {
-        if (mediaPlayer != null) {
-            if (isPlaying) {
-                mediaPlayer.pause();
-            }
-            else {
-                mediaPlayer.start();
-            }
-            isPlaying = !isPlaying;
-        }
+        if (mediaPlayerServiceBinder == null) return;
+
+        mediaPlayerServiceBinder.pauseTrack();
     }
 
     private void NextTrack() {
@@ -175,6 +177,7 @@ public class MainActivity extends AppCompatActivity
         ConfigHelper.getInstance().setPlayOrder(playOrder);
     }
 
+    // OnCompletionListener
     @Override
     public void onCompletion(MediaPlayer mp) {
         NextTrack();

@@ -158,9 +158,12 @@ public class ConfigActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            for (String config : ConfigHelper.getInstance().KEY_ALL_CONFIGS_IN_CONFIGACTIVITY) {
+            Debug.stopwatchStart();
+            for (String config : ConfigHelper.KEY_ALL_CONFIGS_IN_CONFIGACTIVITY) {
                 bindPreferenceSummaryToValue(findPreference(config));
             }
+
+            Debug.toastStopwatch("GetConfig()");
         }
     }
 }
