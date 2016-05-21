@@ -62,7 +62,6 @@ public class PlaylistScanAsyncTask extends AsyncTaskLoader<List<File>> {
 
         @Override
         public boolean accept(File dir, String filename) {
-            Debug.log(dir.getAbsolutePath());
             if (filename.toLowerCase().endsWith(".m3u") || filename.toLowerCase().endsWith(".m3u8")) {
                 return true;
             }

@@ -1,6 +1,9 @@
 package kaist.cs550_2016.poche;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -10,11 +13,22 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.media.MediaMetadataRetriever;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import junit.framework.Assert;
 
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity
         implements BSUI.BSUIEventListener, MediaPlayer.OnCompletionListener {
+
+    private TextView titleTextView;
+    private TextView artistTextView;
+    private TextView durationTextView;
+    private TextView positionTextView;
+    private ImageView albumArtImageView;
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
@@ -48,6 +62,17 @@ public class MainActivity extends AppCompatActivity
         if (ConfigHelper.getInstance().isWakeLock()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+
+        refreshUIElements();
+        positionTextView.setText("0:00");
+    }
+
+    private void refreshUIElements() {
+        titleTextView = (TextView) findViewById(R.id.main_TextTitle);
+        artistTextView = (TextView) findViewById(R.id.main_TextArtist);
+        durationTextView = (TextView) findViewById(R.id.main_TextDuration);
+        positionTextView = (TextView) findViewById(R.id.main_TextPosition);
+        albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumart);
     }
 
 
@@ -96,16 +121,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void PlayTrack() {
-        Uri currentTrack = playlist.GetCurrentTrack();
+        Uri fileURI = playlist.GetCurrentTrack();
+        updateMetadata(fileURI);
 
         if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer.create(this, currentTrack);
+            mediaPlayer = MediaPlayer.create(this, fileURI);
             mediaPlayer.setOnCompletionListener(this);
         }
         else {
             mediaPlayer.reset();
             try {
-                mediaPlayer.setDataSource(this, currentTrack);
+                mediaPlayer.setDataSource(this, fileURI);
                 mediaPlayer.prepare();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -152,5 +178,57 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCompletion(MediaPlayer mp) {
         NextTrack();
+    }
+
+    private void updateMetadata(Uri uri) {
+        String trackTitle, trackArtist;
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(this, uri);
+        refreshUIElements();
+        try {
+            trackTitle = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+        } catch (Exception e) {
+            trackTitle = uri.getPath();
+        }
+        try {
+            trackArtist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        } catch (Exception e) {
+            trackArtist = "No Data";
+        }
+        // Android API returns the track length in milliseconds as a String
+        String trackLength = millisecondsToMinuetesAndSeconds(Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
+        try {
+            byte[] bytearr = retriever.getEmbeddedPicture();
+            Bitmap albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
+            albumArtImageView.setImageBitmap(albumArt);
+        } catch (Exception e)
+        {
+            //TODO: get a placeholder instead of being a magenta square
+            albumArtImageView.setImageResource(0);
+            albumArtImageView.setBackgroundColor(Color.MAGENTA);
+        }
+        Debug.log("Title: ", trackTitle);
+        Debug.log("Artist: ", trackArtist);
+        Debug.log("Length: ", trackLength);
+        titleTextView.setText(trackTitle);
+        artistTextView.setText(trackArtist);
+        durationTextView.setText(trackLength);
+    }
+
+    /**
+     * Returns the input time as a String of minuetes : seconds
+     * Rounds up
+     * e.g. 219921 -> 3:40
+     * @param Time in milliseconds
+     * @return
+     */
+    private String millisecondsToMinuetesAndSeconds(int ms)
+    {
+        float seconds = ((float)(ms % 60000)) / 1000;
+        int secs = (int) seconds;
+        if (seconds > secs)
+            secs++;
+        int mins = ms / 60000;
+        return "" + mins + ':' + secs;
     }
 }
