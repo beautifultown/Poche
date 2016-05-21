@@ -42,4 +42,4 @@ proguard/
 captures/
 
 # JDK version difference causes merge conflict
-.idea/misc.xml
+/.idea/misc.xml
