@@ -14,5 +14,8 @@
         <item>Reversed - Left by right swipe, right by left</item>
     </string-array>
     <string name="pref_wakelock">Wake lock</string>
+
     <string name="no_playlist">No playlist available.\nPut *.m3u files in /Poche directory.</string>
+
+    <string name="toast_fail_parseplaylist">There\'re some problem with playlist file!</string>
 </resources>
