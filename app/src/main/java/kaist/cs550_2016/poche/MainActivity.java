@@ -2,15 +2,14 @@ package kaist.cs550_2016.poche;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import android.widget.Toast;
+
+import junit.framework.Assert;
 
 import java.io.IOException;
 
@@ -38,6 +39,11 @@ public class MainActivity extends AppCompatActivity
     private Playlist playlist;
     private GestureDetector gestureDetector;
     private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
+
+    /**
+     * The total length of the track in ms
+     */
+    private int trackDuration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +82,8 @@ public class MainActivity extends AppCompatActivity
 
         reloadUIElements();
         positionTextView.setText("0:00");
+
+        new Tick().execute(500, 0, 0);
     }
 
     private void reloadUIElements() {
@@ -201,7 +209,8 @@ public class MainActivity extends AppCompatActivity
             trackArtist = "No Artist Information";
         }
         // Android API returns the track length in milliseconds as a String
-        String trackLength = millisecondsToMinuetesAndSeconds(Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
+        trackDuration = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        String trackLength = millisecondsToMinuetesAndSeconds(trackDuration);
         try {
             byte[] bytearr = retriever.getEmbeddedPicture();
             albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
@@ -219,10 +228,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
+     * Updates the seek bar and the current time TextView
+     */
+    private void updateTrackTime() {
+        if(mediaPlayerServiceBinder == null) return;
+
+        int seconds = mediaPlayerServiceBinder.getCurrentPosition();
+        reloadUIElements();
+        positionTextView.setText(millisecondsToMinuetesAndSeconds(seconds));
+    }
+
+    /**
      * Returns the input time as a String of minuetes : seconds
      * Rounds up
      * e.g. 219921 -> 3:40
-     * @param Time in milliseconds
+     * @param ms Time in milliseconds
      * @return
      */
     private String millisecondsToMinuetesAndSeconds(int ms)
@@ -233,5 +253,37 @@ public class MainActivity extends AppCompatActivity
             secs++;
         int mins = ms / 60000;
         return "" + mins + ':' + secs;
+    }
+
+    /**
+     * Kind of like an update function
+     * Except it does not take dt as argument
+     */
+    private class Tick extends AsyncTask<Integer, Integer, Integer> {
+        /**
+         * args[0] == tick interval in ms
+         * e.g. if input is [100] the task is run at most 10Hz
+         * Just like update(), there is no guarantee of maintaining 10Hz
+         * @param args
+         * @return
+         */
+        protected Integer doInBackground(Integer... args) {
+            while(true) {
+                try {
+                    Thread.sleep(args[0]);
+                    publishProgress(0);
+                } catch (java.lang.InterruptedException e) {
+                    Assert.assertNotNull(null);
+                }
+            }
+        }
+
+        /**
+         * Does not use any inputs
+         * @param args
+         */
+        protected void onProgressUpdate(Integer... args) {
+            updateTrackTime();
+        }
     }
 }
