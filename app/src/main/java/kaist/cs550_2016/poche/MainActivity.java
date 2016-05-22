@@ -12,7 +12,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Window;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity
     private TextView durationTextView;
     private TextView positionTextView;
     private ImageView albumArtImageView;
+    private ImageView seekBarImageView;
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
@@ -44,9 +47,12 @@ public class MainActivity extends AppCompatActivity
      * The total length of the track in ms
      */
     private int trackDuration;
+//    private float pxPerDip;
+    private float pxPerWidthPercentage, pxPerHeightPercentage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_AppBarOverlay);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -80,18 +86,29 @@ public class MainActivity extends AppCompatActivity
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
+//        pxPerDip = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
+        pxPerHeightPercentage = ((float)getResources().getDisplayMetrics().heightPixels) / 100;
+        pxPerWidthPercentage = ((float)getResources().getDisplayMetrics().widthPixels) / 100;
+
         reloadUIElements();
         positionTextView.setText("0:00");
+        seekBarImageView.setX(-100 * pxPerWidthPercentage);
 
         new Tick().execute(500, 0, 0);
     }
 
+    /**
+     * Android automatically garbage collects these. Call before using the variables.
+     * Probably garbage collects for a good reason?
+     * Might need to improve later if there are memory problems.
+     */
     private void reloadUIElements() {
         titleTextView = (TextView) findViewById(R.id.main_TextTitle);
         artistTextView = (TextView) findViewById(R.id.main_TextArtist);
         durationTextView = (TextView) findViewById(R.id.main_TextDuration);
         positionTextView = (TextView) findViewById(R.id.main_TextPosition);
-        albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumart);
+        albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumArt);
+        seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -192,6 +209,11 @@ public class MainActivity extends AppCompatActivity
         NextTrack();
     }
 
+    /**
+     * Retrieves metadata from the current track and displays them on the UI
+     * Should be used only once per track
+     * @param uri
+     */
     private void updateMetadata(Uri uri) {
         String trackTitle, trackArtist;
         Bitmap albumArt;
@@ -236,6 +258,8 @@ public class MainActivity extends AppCompatActivity
         int seconds = mediaPlayerServiceBinder.getCurrentPosition();
         reloadUIElements();
         positionTextView.setText(millisecondsToMinuetesAndSeconds(seconds));
+        float percentCurrentPosition = ((float) seconds) / trackDuration * 100;
+        seekBarImageView.setX((percentCurrentPosition - 100) * pxPerWidthPercentage);
     }
 
     /**
