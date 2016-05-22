@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Window;
@@ -36,6 +35,7 @@ public class MainActivity extends AppCompatActivity
     private TextView artistTextView;
     private TextView durationTextView;
     private TextView positionTextView;
+    private TextView positionSlashTextView;
     private ImageView albumArtImageView;
     private ImageView seekBarImageView;
 
@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity
         artistTextView = (TextView) findViewById(R.id.main_TextArtist);
         durationTextView = (TextView) findViewById(R.id.main_TextDuration);
         positionTextView = (TextView) findViewById(R.id.main_TextPosition);
+        positionSlashTextView = (TextView) findViewById(R.id.main_TextPositionSlash);
         albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumArt);
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
     }
@@ -215,6 +216,7 @@ public class MainActivity extends AppCompatActivity
      * @param uri
      */
     private void updateMetadata(Uri uri) {
+        // Update text
         String trackTitle, trackArtist;
         Bitmap albumArt;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
@@ -232,7 +234,7 @@ public class MainActivity extends AppCompatActivity
         }
         // Android API returns the track length in milliseconds as a String
         trackDuration = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        String trackLength = millisecondsToMinuetesAndSeconds(trackDuration);
+        String trackLength = millisecondsToMinutesAndSeconds(trackDuration);
         try {
             byte[] bytearr = retriever.getEmbeddedPicture();
             albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
@@ -247,6 +249,23 @@ public class MainActivity extends AppCompatActivity
         titleTextView.setText(trackTitle);
         artistTextView.setText(trackArtist);
         durationTextView.setText(trackLength);
+
+        // update colors
+        int avg = getAverageColor(albumArt);
+        PercentRelativeLayout rootLayout = (PercentRelativeLayout) findViewById(R.id.main_Root);
+        rootLayout.setBackgroundColor(0xFF000000 + avg);
+
+        int r = (0xFF0000 & avg) / 0x10000;
+        int g = (0x00FF00 & avg) / 0x100;
+        int b = 0x0000FF & avg;
+        float darkerRatio = 0.4f;
+        int darkerAvg = 0xFF000000 + getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        titleTextView.setTextColor(darkerAvg);
+        artistTextView.setTextColor(darkerAvg);
+        durationTextView.setTextColor(darkerAvg);
+        positionSlashTextView.setTextColor(darkerAvg);
+        positionTextView.setTextColor(darkerAvg);
+        seekBarImageView.setBackgroundColor(darkerAvg);
     }
 
     /**
@@ -257,20 +276,19 @@ public class MainActivity extends AppCompatActivity
 
         int seconds = mediaPlayerServiceBinder.getCurrentPosition();
         reloadUIElements();
-        positionTextView.setText(millisecondsToMinuetesAndSeconds(seconds));
+        positionTextView.setText(millisecondsToMinutesAndSeconds(seconds));
         float percentCurrentPosition = ((float) seconds) / trackDuration * 100;
         seekBarImageView.setX((percentCurrentPosition - 100) * pxPerWidthPercentage);
     }
 
     /**
-     * Returns the input time as a String of minuetes : seconds
+     * Returns the input time as a String of minutes : seconds
      * Rounds up
      * e.g. 219921 -> 3:40
      * @param ms Time in milliseconds
      * @return
      */
-    private String millisecondsToMinuetesAndSeconds(int ms)
-    {
+    private String millisecondsToMinutesAndSeconds(int ms) {
         float seconds = ((float)(ms % 60000)) / 1000;
         int secs = (int) seconds;
         if (seconds > secs)
@@ -278,6 +296,49 @@ public class MainActivity extends AppCompatActivity
         String suffix = secs<10 ? ":0" + secs : ":" + secs;
         int mins = ms / 60000;
         return "" + mins + suffix;
+    }
+
+    /**
+     * Uses getColorInt() for finalizing the return value
+     * If too computationally expensive, just increase the stride
+     * @param bmp
+     * @return
+     */
+    private int getAverageColor(Bitmap bmp) {
+        int totalCount = bmp.getWidth() * bmp.getHeight();
+        int[] pixels = new int[totalCount];
+        bmp.getPixels(pixels, 0, bmp.getWidth(), 0, 0, bmp.getWidth(), bmp.getHeight());
+        // int causes overflow
+        long totalR = 0;
+        long totalG = 0;
+        long totalB = 0;
+        for (int px : pixels) {
+            int r = (0xFF0000 & px) / 0x10000;
+            int g = (0x00FF00 & px) / 0x100;
+            int b = 0x0000FF & px;
+            totalR += r * r;
+            totalG += g * g;
+            totalB += b * b;
+        }
+        totalR = (int) Math.sqrt(totalR / totalCount);
+        totalG = (int) Math.sqrt(totalG / totalCount);
+        totalB = (int) Math.sqrt(totalB / totalCount);
+        return getColorInt((int) totalR, (int) totalG, (int) totalB);
+    }
+
+    /**
+     * Returns an int that contains RGB information as 0xRRGGBB
+     * Might need to add 0xFF000000 if using for ARGB
+     * @param r
+     * @param g
+     * @param b
+     * @return
+     */
+    private int getColorInt(int r, int g, int b) {
+        int output = 0x10000 * r;
+        output += 0x100 * g;
+        output += b;
+        return output;
     }
 
     /**
