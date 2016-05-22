@@ -1,6 +1,8 @@
 package kaist.cs550_2016.poche;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -20,7 +22,6 @@ import android.media.MediaMetadataRetriever;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import junit.framework.Assert;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -73,11 +74,11 @@ public class MainActivity extends AppCompatActivity
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
-        refreshUIElements();
+        reloadUIElements();
         positionTextView.setText("0:00");
     }
 
-    private void refreshUIElements() {
+    private void reloadUIElements() {
         titleTextView = (TextView) findViewById(R.id.main_TextTitle);
         artistTextView = (TextView) findViewById(R.id.main_TextArtist);
         durationTextView = (TextView) findViewById(R.id.main_TextDuration);
@@ -185,9 +186,10 @@ public class MainActivity extends AppCompatActivity
 
     private void updateMetadata(Uri uri) {
         String trackTitle, trackArtist;
+        Bitmap albumArt;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(this, uri);
-        refreshUIElements();
+        reloadUIElements();
         try {
             trackTitle = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         } catch (Exception e) {
@@ -196,20 +198,18 @@ public class MainActivity extends AppCompatActivity
         try {
             trackArtist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
         } catch (Exception e) {
-            trackArtist = "No Data";
+            trackArtist = "No Artist Information";
         }
         // Android API returns the track length in milliseconds as a String
         String trackLength = millisecondsToMinuetesAndSeconds(Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
         try {
             byte[] bytearr = retriever.getEmbeddedPicture();
-            Bitmap albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
-            albumArtImageView.setImageBitmap(albumArt);
+            albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
         } catch (Exception e)
         {
-            //TODO: get a placeholder instead of being a magenta square
-            albumArtImageView.setImageResource(0);
-            albumArtImageView.setBackgroundColor(Color.MAGENTA);
+            albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.random_album_art);
         }
+        albumArtImageView.setImageBitmap(albumArt);
         Debug.log("Title: ", trackTitle);
         Debug.log("Artist: ", trackArtist);
         Debug.log("Length: ", trackLength);
