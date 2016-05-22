@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity
         positionTextView.setText("0:00");
         seekBarImageView.setX(-100 * pxPerWidthPercentage);
 
-        new Tick().execute(500, 0, 0);
+        new Tick().execute(1000/60, 0, 0);
     }
 
     /**
