@@ -251,8 +251,9 @@ public class MainActivity extends AppCompatActivity
         int secs = (int) seconds;
         if (seconds > secs)
             secs++;
+        String suffix = secs<10 ? ":0" + secs : ":" + secs;
         int mins = ms / 60000;
-        return "" + mins + ':' + secs;
+        return "" + mins + suffix;
     }
 
     /**
