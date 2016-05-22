@@ -260,6 +260,15 @@ public class MainActivity extends AppCompatActivity
         int b = 0x0000FF & avg;
         float darkerRatio = 0.4f;
         int darkerAvg = 0xFF000000 + getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        double brightnessDelta = (r + g + b) * 0.6;
+        // if too little difference, boost text color so it's brighter than the background
+        // arbitrary threshold that felt good enough
+        if (brightnessDelta < 300) {
+            int max = r>g ? r : g;
+            max =  max>b ? max : b;
+            int diff = 255 - max;
+            darkerAvg += diff * 0x10000 + diff * 0x100 + diff;
+        }
         titleTextView.setTextColor(darkerAvg);
         artistTextView.setTextColor(darkerAvg);
         durationTextView.setTextColor(darkerAvg);
