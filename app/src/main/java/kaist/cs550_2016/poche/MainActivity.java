@@ -234,15 +234,18 @@ public class MainActivity extends AppCompatActivity
         } catch (Exception e) {
             trackArtist = "No Artist Information";
         }
+
         // Android API returns the track length in milliseconds as a String
-        trackDuration = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        trackDuration = Integer.parseInt(
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
         String trackLength = millisecondsToMinutesAndSeconds(trackDuration);
         try {
             byte[] bytearr = retriever.getEmbeddedPicture();
             albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
         } catch (Exception e)
         {
-            albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.random_album_art);
+            albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(),
+                    R.drawable.random_album_art);
         }
         albumArtImageView.setImageBitmap(albumArt);
         Debug.log("Title: ", trackTitle);
