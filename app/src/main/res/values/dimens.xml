@@ -6,4 +6,5 @@
     <dimen name="font_size_large">30dp</dimen>
     <dimen name="font_size_medium">20dp</dimen>
     <dimen name="font_size_small">17dp</dimen>
+    <dimen name="font_size_mini">15dp</dimen>
 </resources>

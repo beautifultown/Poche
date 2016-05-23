@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.PorterDuff;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -20,6 +21,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.media.MediaMetadataRetriever;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import android.widget.Toast;
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity
     private TextView positionSlashTextView;
     private ImageView albumArtImageView;
     private ImageView seekBarImageView;
+    private RelativeLayout controlLayout;
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
@@ -111,6 +114,7 @@ public class MainActivity extends AppCompatActivity
         positionSlashTextView = (TextView) findViewById(R.id.main_TextPositionSlash);
         albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumArt);
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
+        controlLayout = (RelativeLayout) findViewById(R.id.main_Control_Layout);
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -263,23 +267,38 @@ public class MainActivity extends AppCompatActivity
         int r = (0xFF0000 & avg) / 0x10000;
         int g = (0x00FF00 & avg) / 0x100;
         int b = 0x0000FF & avg;
+        int max = r>g ? r : g;
+        max =  max>b ? max : b;
         float darkerRatio = 0.4f;
+        float lighterRatio = 0.6f;
         int darkerAvg = 0xFF000000 + getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        int lightMod = (int) ((255-max) * lighterRatio);
+        int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
+        int color1, color2;
         double brightnessDelta = (r + g + b) * 0.6;
         // if too little difference, boost text color so it's brighter than the background
         // arbitrary threshold that felt good enough
         if (brightnessDelta < 300) {
-            int max = r>g ? r : g;
-            max =  max>b ? max : b;
-            int diff = 255 - max;
-            darkerAvg += diff * 0x10000 + diff * 0x100 + diff;
+            color1 = lighterAvg;
+            float color2Ratio = 1/darkerRatio;
+            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+        // and if the average color is not dark
+        } else {
+            color1 = darkerAvg;
+            float color2Ratio = darkerRatio * 1.7f;
+            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
         }
-        titleTextView.setTextColor(darkerAvg);
-        artistTextView.setTextColor(darkerAvg);
-        durationTextView.setTextColor(darkerAvg);
-        positionSlashTextView.setTextColor(darkerAvg);
-        positionTextView.setTextColor(darkerAvg);
-        seekBarImageView.setBackgroundColor(darkerAvg);
+        titleTextView.setTextColor(color1);
+        artistTextView.setTextColor(color1);
+        durationTextView.setTextColor(color1);
+        positionSlashTextView.setTextColor(color1);
+        positionTextView.setTextColor(color1);
+        seekBarImageView.setBackgroundColor(color1);
+
+        for (int i=0; i < controlLayout.getChildCount(); i++) {
+            ImageView iv = (ImageView) controlLayout.getChildAt(i);
+            iv.setColorFilter(color2, PorterDuff.Mode.SRC_IN);
+        }
     }
 
     /**
@@ -343,12 +362,19 @@ public class MainActivity extends AppCompatActivity
     /**
      * Returns an int that contains RGB information as 0xRRGGBB
      * Might need to add 0xFF000000 if using for ARGB
+     * Clips input to [0, 255]
      * @param r
      * @param g
      * @param b
      * @return
      */
     private int getColorInt(int r, int g, int b) {
+        r = r<0 ? 0 : r;
+        r = r>255? 255 : r;
+        g = g<0 ? 0 : g;
+        g = g>255? 255 : g;
+        b = b<0 ? 0 : b;
+        b = b>255? 255 : b;
         int output = 0x10000 * r;
         output += 0x100 * g;
         output += b;

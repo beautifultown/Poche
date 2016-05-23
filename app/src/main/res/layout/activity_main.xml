@@ -92,44 +92,65 @@
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/main_Control_Layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
-                android:text="Play/Pause"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:src="@drawable/linear"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="40dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/volume_up"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
-                android:text="Prev Track"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:src="@drawable/prev_track"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="20dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/playpause"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
-                android:text="Next Track"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:src="@drawable/next_track"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="40dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/volume_down"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
-                android:text="Stop"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:src="@drawable/shuffle"/>
 
         </RelativeLayout>
 
