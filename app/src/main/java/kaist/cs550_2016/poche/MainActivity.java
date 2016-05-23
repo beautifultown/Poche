@@ -1,5 +1,6 @@
 package kaist.cs550_2016.poche;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -199,7 +200,8 @@ public class MainActivity extends AppCompatActivity
             trackArtist = "No Data";
         }
         // Android API returns the track length in milliseconds as a String
-        String trackLength = millisecondsToMinuetesAndSeconds(Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
+        String trackLength = millisecondsToMinuetesAndSeconds(
+                Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
         try {
             byte[] bytearr = retriever.getEmbeddedPicture();
             Bitmap albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
@@ -222,7 +224,7 @@ public class MainActivity extends AppCompatActivity
      * Returns the input time as a String of minuetes : seconds
      * Rounds up
      * e.g. 219921 -> 3:40
-     * @param Time in milliseconds
+     * @param ms in milliseconds
      * @return
      */
     private String millisecondsToMinuetesAndSeconds(int ms)
