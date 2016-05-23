@@ -46,6 +46,9 @@ public class MediaPlayerService extends Service {
         if (mediaPlayer != null) mediaPlayer.release();
     }
 
+    /**
+     * Wraps the default MediaPlayer class as a Service
+     */
     public class MediaPlayerServiceBinder extends Binder {
 
         public void initialize(MediaPlayer.OnCompletionListener listener) {
@@ -76,6 +79,11 @@ public class MediaPlayerService extends Service {
                 }
                 isPlaying = !isPlaying;
             }
+        }
+
+        public int getCurrentPosition() {
+            if(mediaPlayer == null) return 0;
+            return mediaPlayer.getCurrentPosition();
         }
     }
 }
