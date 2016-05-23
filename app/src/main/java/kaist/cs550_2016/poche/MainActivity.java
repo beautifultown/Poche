@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity
     private Playlist playlist;
     private GestureDetector gestureDetector;
     private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
+    private AsyncTask tick;
 
     /**
      * The total length of the track in ms
@@ -94,7 +95,7 @@ public class MainActivity extends AppCompatActivity
         positionTextView.setText("0:00");
         seekBarImageView.setX(-100 * pxPerWidthPercentage);
 
-        new Tick().execute(1000/60, 0, 0);
+        tick = new Tick().execute(1000/60, 0, 0);
     }
 
     /**
@@ -133,6 +134,7 @@ public class MainActivity extends AppCompatActivity
             unbindService(connection);
             mediaPlayerServiceBinder = null;
         }
+        if (tick != null) tick.cancel(true);
     }
 
     // TouchListener()
