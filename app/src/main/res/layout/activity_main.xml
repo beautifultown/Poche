@@ -33,15 +33,18 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
+        android:clipToPadding="false"
         android:background="@drawable/main_background">
 
         <TextView
             android:id="@+id/main_TextTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="-10dp"
+            android:layout_marginLeft="-10dp"
             android:gravity="left"
-            android:layout_margin="5dp"
             android:text="Kind of long track name"
+            android:textSize="@dimen/font_size_large"
             android:textAppearance="?android:attr/textAppearanceLarge"/>
 
         <TextView
@@ -49,12 +52,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="right"
-            android:layout_margin="4dp"
+            android:layout_marginRight="-10dp"
+            android:textSize="@dimen/font_size_medium"
             android:text="Artist Name"
             android:textAppearance="?android:attr/textAppearanceMedium"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
+            android:layout_marginTop="-10dp"
             android:layout_height="wrap_content">
 
             <TextView
@@ -63,6 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"
                 android:layout_toLeftOf="@+id/main_TextPositionSlash"
+                android:textSize="@dimen/font_size_small"
                 android:text="12 : 34"/>
 
             <TextView
@@ -71,6 +77,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"
                 android:layout_centerInParent="true"
+                android:textSize="@dimen/font_size_small"
                 android:text="/"/>
 
             <TextView
@@ -79,6 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"
                 android:layout_toRightOf="@+id/main_TextPositionSlash"
+                android:textSize="@dimen/font_size_small"
                 android:text="23 : 45"/>
 
         </RelativeLayout>
