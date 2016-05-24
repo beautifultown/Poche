@@ -2,12 +2,8 @@ package kaist.cs550_2016.poche;
 
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by Leegeun Ha on 2016-05-09.
@@ -16,6 +12,8 @@ import java.util.TimerTask;
 public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
     private static final long DELAY_BETWEEN_DOUBLE_STROKE_MS = 480;
+    private static final double STROKE_DEADZONE_ANGLE_DEGREE = 5;
+    private static final double STROKE_MINIMUM_DISTANCE_PX = 400;
 
     private BSUIEvent previousEvent;
     private BSUIEventListener bsuiEventListener;
@@ -34,6 +32,21 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         float speedX = Math.abs(velocityX);
         float speedY = Math.abs(velocityY);
+        float distanceX = Math.abs(e1.getX() - e2.getX());
+        float distanceY = Math.abs(e1.getY() - e2.getY());
+
+        // ignore short drags
+        float distanceXY = distanceX + distanceY;
+        Debug.log("Manhattan Dist: " + distanceXY);
+        if (distanceXY < STROKE_MINIMUM_DISTANCE_PX) return true;
+
+        // ignore dead zone 45 deg +- STROKE_DEADZONE_ANGLE_DEGREE
+        double angle = Math.toDegrees(Math.atan2(distanceY, distanceX));
+        double deadZoneProximity = angle - 45.0;
+        if (deadZoneProximity < STROKE_DEADZONE_ANGLE_DEGREE
+                && deadZoneProximity > -STROKE_DEADZONE_ANGLE_DEGREE) {
+            return true;
+        }
 
         if (speedX > speedY) {
             if (e1.getX() < e2.getX()) {

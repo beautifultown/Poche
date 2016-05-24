@@ -128,4 +128,14 @@
 
     </LinearLayout>
 
+    <View
+        android:id="@+id/main_BSUIRegion"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="15dp">
+    </View>
+
 </android.support.percent.PercentRelativeLayout>

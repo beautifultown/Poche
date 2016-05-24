@@ -16,6 +16,7 @@ import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.media.MediaMetadataRetriever;
@@ -78,6 +79,15 @@ public class MainActivity extends AppCompatActivity
         BSUI bsui = new BSUI();
         bsui.setBSUIEventListener(this);
         gestureDetector = new GestureDetector(this, bsui);
+        View bsuiRegion = findViewById(R.id.main_BSUIRegion);
+        bsuiRegion.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                Debug.log("MotionEvent: " + event);
+                gestureDetector.onTouchEvent(event);
+                return true;
+            }
+        });
 
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
@@ -135,13 +145,6 @@ public class MainActivity extends AppCompatActivity
             mediaPlayerServiceBinder = null;
         }
         if (tick != null) tick.cancel(true);
-    }
-
-    // TouchListener()
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        gestureDetector.onTouchEvent(event);
-        return super.onTouchEvent(event);
     }
 
     @Override
@@ -223,7 +226,6 @@ public class MainActivity extends AppCompatActivity
         Bitmap albumArt;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(this, uri);
-        reloadUIElements();
         try {
             trackTitle = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         } catch (Exception e) {
@@ -289,7 +291,6 @@ public class MainActivity extends AppCompatActivity
         if(mediaPlayerServiceBinder == null) return;
 
         int seconds = mediaPlayerServiceBinder.getCurrentPosition();
-        reloadUIElements();
         positionTextView.setText(millisecondsToMinutesAndSeconds(seconds));
         float percentCurrentPosition = ((float) seconds) / trackDuration * 100;
         seekBarImageView.setX((percentCurrentPosition - 100) * pxPerWidthPercentage);

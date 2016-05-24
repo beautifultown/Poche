@@ -81,8 +81,10 @@ public class PlaylistActivity extends AppCompatActivity
     public void onLoadFinished(Loader<List<File>> loader, List<File> data) {
         listViewAdapter = new PlaylistAdapter(this, R.layout.activity_playlist_list_item, data);
         playlistListView.setAdapter(listViewAdapter);
+        if (playlistFiles == null) {
+            Debug.toastStopwatch("GetPlaylist()");
+        }
         playlistFiles = data;
-        Debug.toastStopwatch("GetPlaylist()");
     }
 
     @Override

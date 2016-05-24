@@ -24,7 +24,7 @@ public class Debug {
      */
     public static void log(Object tag, String message) {
         if (!isDebug) return;
-        Log.w(tag.getClass().getSimpleName(), message);
+        Log.w(tag.toString(), message);
     }
 
     /**
