@@ -39,18 +39,24 @@ public class MainActivity extends AppCompatActivity
     private TextView positionTextView;
     private TextView positionSlashTextView;
     private ImageView albumArtImageView;
+    private ImageView nextAlbumArtImageView;
     private ImageView seekBarImageView;
     private RelativeLayout controlLayout;
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
     private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
-    private AsyncTask tick;
+    private AsyncTask tick, albumArtTransition;
+    private Bitmap nextAlbumArt;
+    private BSUI bsui;
+
+    private boolean directionLeft;
 
     /**
      * The total length of the track in ms
      */
     private int trackDuration;
+    private int screenWidth, screenHeight;
 //    private float pxPerDip;
     private float pxPerWidthPercentage, pxPerHeightPercentage;
 
@@ -78,7 +84,7 @@ public class MainActivity extends AppCompatActivity
                 connection, BIND_AUTO_CREATE);
         // Start media playback in onServiceConnected
 
-        BSUI bsui = new BSUI();
+        bsui = new BSUI();
         bsui.setBSUIEventListener(this);
         gestureDetector = new GestureDetector(this, bsui);
 
@@ -90,15 +96,19 @@ public class MainActivity extends AppCompatActivity
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
+        screenHeight = getResources().getDisplayMetrics().heightPixels;
+        screenWidth = getResources().getDisplayMetrics().widthPixels;
 //        pxPerDip = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
-        pxPerHeightPercentage = ((float)getResources().getDisplayMetrics().heightPixels) / 100;
-        pxPerWidthPercentage = ((float)getResources().getDisplayMetrics().widthPixels) / 100;
+        pxPerHeightPercentage = ((float) screenHeight) / 100;
+        pxPerWidthPercentage = ((float) screenWidth) / 100;
 
+        nextAlbumArt = null;
         reloadUIElements();
         positionTextView.setText("0:00");
         seekBarImageView.setX(-100 * pxPerWidthPercentage);
+        nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
 
-        tick = new Tick().execute(1000/60, 0, 0);
+        tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1000/60);
     }
 
     /**
@@ -113,6 +123,7 @@ public class MainActivity extends AppCompatActivity
         positionTextView = (TextView) findViewById(R.id.main_TextPosition);
         positionSlashTextView = (TextView) findViewById(R.id.main_TextPositionSlash);
         albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumArt);
+        nextAlbumArtImageView = (ImageView) findViewById(R.id.main_NextImageAlbumArt);
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
         controlLayout = (RelativeLayout) findViewById(R.id.main_Control_Layout);
     }
@@ -182,6 +193,7 @@ public class MainActivity extends AppCompatActivity
         Uri fileURI = playlist.GetCurrentTrack();
         mediaPlayerServiceBinder.setTrack(fileURI);
         updateMetadata(fileURI);
+        directionLeft = false;
     }
 
     private void pauseResume() {
@@ -191,11 +203,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void NextTrack() {
+        directionLeft = false;
         playlist.NextTrack();
         PlayTrack();
     }
 
     private void PrevTrack() {
+        directionLeft = true;
         playlist.PrevTrack();
         PlayTrack();
     }
@@ -251,7 +265,18 @@ public class MainActivity extends AppCompatActivity
             albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(),
                     R.drawable.random_album_art);
         }
-        albumArtImageView.setImageBitmap(albumArt);
+        if(nextAlbumArt == null) {
+            albumArtImageView.setImageBitmap(albumArt);
+        } else {
+            if (albumArtTransition != null) {
+                albumArtTransition.cancel(true);
+                albumArtImageView.setImageBitmap(nextAlbumArt);
+            }
+            nextAlbumArtImageView.setImageBitmap(Bitmap.createScaledBitmap(albumArt, screenWidth/10, screenWidth/10, true));
+            int direction = directionLeft ? 0 : 1;
+            albumArtTransition = new AlbumArtTransition().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 500, 1000/60, direction);
+        }
+        nextAlbumArt = albumArt;
         Debug.log("Title: ", trackTitle);
         Debug.log("Artist: ", trackArtist);
         Debug.log("Length: ", trackLength);
@@ -303,6 +328,26 @@ public class MainActivity extends AppCompatActivity
             } else {
                 iv.setColorFilter(color2ReducedOpacacity, PorterDuff.Mode.SRC_IN);
             }
+        }
+    }
+
+    /**
+     * Updates the UI animation during track transition
+     * @param progress assumed to be [0, 1]
+     * @param direction false is left to right, true is right to left
+     */
+    private void updateAlbumArt(float progress, boolean direction){
+        reloadUIElements();
+        // if next track
+        // i.e. next album art coming in from the right
+        if(direction) {
+            nextAlbumArtImageView.setX(100 * (1 - progress) * pxPerWidthPercentage);
+        } else {
+            nextAlbumArtImageView.setX(-100 * (1 - progress) * pxPerWidthPercentage);
+        }
+        if(progress >= 1) {
+            albumArtImageView.setImageBitmap(nextAlbumArt);
+            nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
         }
     }
 
@@ -416,5 +461,47 @@ public class MainActivity extends AppCompatActivity
         protected void onProgressUpdate(Integer... args) {
             updateTrackTime();
         }
+    }
+
+    /**
+     * Measures the time since an album art transition was called, and notifies the UI updater
+     * responsible for the transition on how much time has passed.
+     */
+    private class AlbumArtTransition extends AsyncTask<Integer, Float, Integer> {
+        /**
+         * args[0] == total time in ms
+         * args[1] == tick interval in ms
+         * args[2] == direction. 0 is Prev, 1 is Next
+         * Does not guarantee constant tick rate.
+         * @param args
+         * @return
+         */
+        protected Integer doInBackground(Integer ... args) {
+            long timeBeforeSleep = System.currentTimeMillis();
+            int timeElapsed = 0;
+            int timeTarget = args[0];
+            int timeTick = args[1];
+            int direction = args[2];
+            Assert.assertTrue(direction == 0 || direction == 1);
+            while(timeElapsed < timeTarget) {
+                try {
+                    Thread.sleep(timeTick);
+                    timeElapsed += System.currentTimeMillis() - timeBeforeSleep;
+                    publishProgress(((float) timeElapsed) / timeTarget, (float) direction);
+                } catch (java.lang.InterruptedException e) {
+                    Assert.assertNotNull(null);
+                }
+            }
+            publishProgress(1.0f, (float) direction);
+            return 0;
+        }
+
+        /**
+         * args[0] == time elapsed as a ratio of time elapsed vs total time
+         * args[1] == direction. 0 is Left, 1 is Right.
+         * No error checking
+         * @param args
+         */
+        protected void onProgressUpdate(Float ... args) { updateAlbumArt(args[0], args[1] > 0); }
     }
 }

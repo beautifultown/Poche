@@ -17,6 +17,14 @@
         percent:layout_widthPercent="100%"
         android:src="@drawable/random_album_art"/>
 
+    <ImageView
+        android:id="@+id/main_NextImageAlbumArt"
+        android:layout_height="0dp"
+        android:layout_width="0dp"
+        percent:layout_aspectRatio="100%"
+        percent:layout_widthPercent="100%"
+        android:src="@drawable/random_album_art"/>
+
 
     <ImageView
         android:id="@+id/main_SeekBar"
