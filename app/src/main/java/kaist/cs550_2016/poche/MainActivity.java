@@ -51,6 +51,8 @@ public class MainActivity extends AppCompatActivity
     private BSUI bsui;
 
     private boolean directionLeft;
+    private int uiUpdateFrameRate = 1000/30;
+    private int albumArtTransitionFrameRate = 1000/60;
 
     /**
      * The total length of the track in ms
@@ -108,7 +110,7 @@ public class MainActivity extends AppCompatActivity
         seekBarImageView.setX(-100 * pxPerWidthPercentage);
         nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
 
-        tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1000/60);
+        tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
     }
 
     /**
@@ -274,7 +276,7 @@ public class MainActivity extends AppCompatActivity
             }
             nextAlbumArtImageView.setImageBitmap(Bitmap.createScaledBitmap(albumArt, screenWidth/10, screenWidth/10, true));
             int direction = directionLeft ? 0 : 1;
-            albumArtTransition = new AlbumArtTransition().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 500, 1000/60, direction);
+            albumArtTransition = new AlbumArtTransition().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 500, albumArtTransitionFrameRate, direction);
         }
         nextAlbumArt = albumArt;
         Debug.log("Title: ", trackTitle);
