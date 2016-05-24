@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.PorterDuff;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -21,6 +22,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.media.MediaMetadataRetriever;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import android.widget.Toast;
@@ -38,17 +40,26 @@ public class MainActivity extends AppCompatActivity
     private TextView positionTextView;
     private TextView positionSlashTextView;
     private ImageView albumArtImageView;
+    private ImageView nextAlbumArtImageView;
     private ImageView seekBarImageView;
+    private RelativeLayout controlLayout;
 
     private Playlist playlist;
     private GestureDetector gestureDetector;
     private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
-    private AsyncTask tick;
+    private AsyncTask tick, albumArtTransition;
+    private Bitmap nextAlbumArt;
+    private BSUI bsui;
+
+    private boolean directionLeft;
+    private int uiUpdateFrameRate = 1000/30;
+    private int albumArtTransitionFrameRate = 1000/60;
 
     /**
      * The total length of the track in ms
      */
     private int trackDuration;
+    private int screenWidth, screenHeight;
 //    private float pxPerDip;
     private float pxPerWidthPercentage, pxPerHeightPercentage;
 
@@ -76,7 +87,7 @@ public class MainActivity extends AppCompatActivity
                 connection, BIND_AUTO_CREATE);
         // Start media playback in onServiceConnected
 
-        BSUI bsui = new BSUI();
+        bsui = new BSUI();
         bsui.setBSUIEventListener(this);
         gestureDetector = new GestureDetector(this, bsui);
         View bsuiRegion = findViewById(R.id.main_BSUIRegion);
@@ -97,15 +108,19 @@ public class MainActivity extends AppCompatActivity
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
+        screenHeight = getResources().getDisplayMetrics().heightPixels;
+        screenWidth = getResources().getDisplayMetrics().widthPixels;
 //        pxPerDip = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
-        pxPerHeightPercentage = ((float)getResources().getDisplayMetrics().heightPixels) / 100;
-        pxPerWidthPercentage = ((float)getResources().getDisplayMetrics().widthPixels) / 100;
+        pxPerHeightPercentage = ((float) screenHeight) / 100;
+        pxPerWidthPercentage = ((float) screenWidth) / 100;
 
+        nextAlbumArt = null;
         reloadUIElements();
         positionTextView.setText("0:00");
         seekBarImageView.setX(-100 * pxPerWidthPercentage);
+        nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
 
-        tick = new Tick().execute(1000/60, 0, 0);
+        tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
     }
 
     /**
@@ -120,7 +135,9 @@ public class MainActivity extends AppCompatActivity
         positionTextView = (TextView) findViewById(R.id.main_TextPosition);
         positionSlashTextView = (TextView) findViewById(R.id.main_TextPositionSlash);
         albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumArt);
+        nextAlbumArtImageView = (ImageView) findViewById(R.id.main_NextImageAlbumArt);
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
+        controlLayout = (RelativeLayout) findViewById(R.id.main_Control_Layout);
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -181,6 +198,7 @@ public class MainActivity extends AppCompatActivity
         Uri fileURI = playlist.GetCurrentTrack();
         mediaPlayerServiceBinder.setTrack(fileURI);
         updateMetadata(fileURI);
+        directionLeft = false;
     }
 
     private void pauseResume() {
@@ -190,11 +208,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void NextTrack() {
+        directionLeft = false;
         playlist.NextTrack();
         PlayTrack();
     }
 
     private void PrevTrack() {
+        directionLeft = true;
         playlist.PrevTrack();
         PlayTrack();
     }
@@ -249,7 +269,18 @@ public class MainActivity extends AppCompatActivity
             albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(),
                     R.drawable.random_album_art);
         }
-        albumArtImageView.setImageBitmap(albumArt);
+        if(nextAlbumArt == null) {
+            albumArtImageView.setImageBitmap(albumArt);
+        } else {
+            if (albumArtTransition != null) {
+                albumArtTransition.cancel(true);
+                albumArtImageView.setImageBitmap(nextAlbumArt);
+            }
+            nextAlbumArtImageView.setImageBitmap(Bitmap.createScaledBitmap(albumArt, screenWidth/10, screenWidth/10, true));
+            int direction = directionLeft ? 0 : 1;
+            albumArtTransition = new AlbumArtTransition().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 500, albumArtTransitionFrameRate, direction);
+        }
+        nextAlbumArt = albumArt;
         Debug.log("Title: ", trackTitle);
         Debug.log("Artist: ", trackArtist);
         Debug.log("Length: ", trackLength);
@@ -265,23 +296,63 @@ public class MainActivity extends AppCompatActivity
         int r = (0xFF0000 & avg) / 0x10000;
         int g = (0x00FF00 & avg) / 0x100;
         int b = 0x0000FF & avg;
+        int max = r>g ? r : g;
+        max =  max>b ? max : b;
         float darkerRatio = 0.4f;
+        float lighterRatio = 0.6f;
         int darkerAvg = 0xFF000000 + getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        int lightMod = (int) ((255-max) * lighterRatio);
+        int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
+        int color1, color2;
         double brightnessDelta = (r + g + b) * 0.6;
         // if too little difference, boost text color so it's brighter than the background
         // arbitrary threshold that felt good enough
         if (brightnessDelta < 300) {
-            int max = r>g ? r : g;
-            max =  max>b ? max : b;
-            int diff = 255 - max;
-            darkerAvg += diff * 0x10000 + diff * 0x100 + diff;
+            color1 = lighterAvg;
+            float color2Ratio = 1/darkerRatio;
+            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+        // and if the average color is not dark
+        } else {
+            color1 = darkerAvg;
+            float color2Ratio = darkerRatio * 1.7f;
+            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
         }
-        titleTextView.setTextColor(darkerAvg);
-        artistTextView.setTextColor(darkerAvg);
-        durationTextView.setTextColor(darkerAvg);
-        positionSlashTextView.setTextColor(darkerAvg);
-        positionTextView.setTextColor(darkerAvg);
-        seekBarImageView.setBackgroundColor(darkerAvg);
+        titleTextView.setTextColor(color1);
+        artistTextView.setTextColor(color1);
+        durationTextView.setTextColor(color1);
+        positionSlashTextView.setTextColor(color1);
+        positionTextView.setTextColor(color1);
+        seekBarImageView.setBackgroundColor(color1);
+
+        int color2ReducedOpacacity = color2 - 0xAA000000;
+        for (int i=0; i < controlLayout.getChildCount(); i++) {
+            ImageView iv = (ImageView) controlLayout.getChildAt(i);
+            if(iv.getTag() == null) {
+                iv.setColorFilter(color2, PorterDuff.Mode.SRC_IN);
+            } else {
+                iv.setColorFilter(color2ReducedOpacacity, PorterDuff.Mode.SRC_IN);
+            }
+        }
+    }
+
+    /**
+     * Updates the UI animation during track transition
+     * @param progress assumed to be [0, 1]
+     * @param direction false is left to right, true is right to left
+     */
+    private void updateAlbumArt(float progress, boolean direction){
+        reloadUIElements();
+        // if next track
+        // i.e. next album art coming in from the right
+        if(direction) {
+            nextAlbumArtImageView.setX(100 * (1 - progress) * pxPerWidthPercentage);
+        } else {
+            nextAlbumArtImageView.setX(-100 * (1 - progress) * pxPerWidthPercentage);
+        }
+        if(progress >= 1) {
+            albumArtImageView.setImageBitmap(nextAlbumArt);
+            nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
+        }
     }
 
     /**
@@ -344,12 +415,19 @@ public class MainActivity extends AppCompatActivity
     /**
      * Returns an int that contains RGB information as 0xRRGGBB
      * Might need to add 0xFF000000 if using for ARGB
+     * Clips input to [0, 255]
      * @param r
      * @param g
      * @param b
      * @return
      */
     private int getColorInt(int r, int g, int b) {
+        r = r<0 ? 0 : r;
+        r = r>255? 255 : r;
+        g = g<0 ? 0 : g;
+        g = g>255? 255 : g;
+        b = b<0 ? 0 : b;
+        b = b>255? 255 : b;
         int output = 0x10000 * r;
         output += 0x100 * g;
         output += b;
@@ -386,5 +464,47 @@ public class MainActivity extends AppCompatActivity
         protected void onProgressUpdate(Integer... args) {
             updateTrackTime();
         }
+    }
+
+    /**
+     * Measures the time since an album art transition was called, and notifies the UI updater
+     * responsible for the transition on how much time has passed.
+     */
+    private class AlbumArtTransition extends AsyncTask<Integer, Float, Integer> {
+        /**
+         * args[0] == total time in ms
+         * args[1] == tick interval in ms
+         * args[2] == direction. 0 is Prev, 1 is Next
+         * Does not guarantee constant tick rate.
+         * @param args
+         * @return
+         */
+        protected Integer doInBackground(Integer ... args) {
+            long timeBeforeSleep = System.currentTimeMillis();
+            int timeElapsed = 0;
+            int timeTarget = args[0];
+            int timeTick = args[1];
+            int direction = args[2];
+            Assert.assertTrue(direction == 0 || direction == 1);
+            while(timeElapsed < timeTarget) {
+                try {
+                    Thread.sleep(timeTick);
+                    timeElapsed += System.currentTimeMillis() - timeBeforeSleep;
+                    publishProgress(((float) timeElapsed) / timeTarget, (float) direction);
+                } catch (java.lang.InterruptedException e) {
+                    Assert.assertNotNull(null);
+                }
+            }
+            publishProgress(1.0f, (float) direction);
+            return 0;
+        }
+
+        /**
+         * args[0] == time elapsed as a ratio of time elapsed vs total time
+         * args[1] == direction. 0 is Left, 1 is Right.
+         * No error checking
+         * @param args
+         */
+        protected void onProgressUpdate(Float ... args) { updateAlbumArt(args[0], args[1] > 0); }
     }
 }

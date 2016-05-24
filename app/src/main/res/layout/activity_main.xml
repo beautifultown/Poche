@@ -17,6 +17,14 @@
         percent:layout_widthPercent="100%"
         android:src="@drawable/random_album_art"/>
 
+    <ImageView
+        android:id="@+id/main_NextImageAlbumArt"
+        android:layout_height="0dp"
+        android:layout_width="0dp"
+        percent:layout_aspectRatio="100%"
+        percent:layout_widthPercent="100%"
+        android:src="@drawable/random_album_art"/>
+
 
     <ImageView
         android:id="@+id/main_SeekBar"
@@ -33,15 +41,18 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
+        android:clipToPadding="false"
         android:background="@drawable/main_background">
 
         <TextView
             android:id="@+id/main_TextTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="-10dp"
+            android:layout_marginLeft="-10dp"
             android:gravity="left"
-            android:layout_margin="5dp"
             android:text="Kind of long track name"
+            android:textSize="@dimen/font_size_large"
             android:textAppearance="?android:attr/textAppearanceLarge"/>
 
         <TextView
@@ -49,12 +60,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="right"
-            android:layout_margin="4dp"
+            android:layout_marginRight="-10dp"
+            android:textSize="@dimen/font_size_medium"
             android:text="Artist Name"
             android:textAppearance="?android:attr/textAppearanceMedium"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
+            android:layout_marginTop="-10dp"
             android:layout_height="wrap_content">
 
             <TextView
@@ -63,6 +76,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"
                 android:layout_toLeftOf="@+id/main_TextPositionSlash"
+                android:textSize="@dimen/font_size_small"
                 android:text="12 : 34"/>
 
             <TextView
@@ -71,6 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"
                 android:layout_centerInParent="true"
+                android:textSize="@dimen/font_size_small"
                 android:text="/"/>
 
             <TextView
@@ -79,49 +94,127 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="3dp"
                 android:layout_toRightOf="@+id/main_TextPositionSlash"
+                android:textSize="@dimen/font_size_small"
                 android:text="23 : 45"/>
 
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/main_Control_Layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:clipToPadding="false">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="-90"
+                android:tag="bracket"
+                android:src="@drawable/bracket_double"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
                 android:layout_height="wrap_content"
                 android:layout_margin="20dp"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
-                android:text="Play/Pause"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:rotation="-90"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="20dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/linear"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="40dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/volume_up"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
-                android:text="Prev Track"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:src="@drawable/prev_track"/>
 
-            <TextView
-                android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:rotation="180"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="20dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/playpause"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
-                android:text="Next Track"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:src="@drawable/next_track"/>
 
-            <TextView
-                android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="40dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/volume_down"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_medium"
+                android:layout_height="@dimen/font_size_mini"
+                android:layout_margin="20dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/shuffle"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
                 android:layout_height="wrap_content"
                 android:layout_margin="20dp"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
-                android:text="Stop"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:rotation="90"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="90"
+                android:tag="bracket"
+                android:src="@drawable/bracket_double"/>
 
         </RelativeLayout>
 

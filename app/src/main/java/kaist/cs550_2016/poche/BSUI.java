@@ -15,7 +15,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
     private static final double STROKE_DEADZONE_ANGLE_DEGREE = 5;
     private static final double STROKE_MINIMUM_DISTANCE_PX = 400;
 
-    private BSUIEvent previousEvent;
+    private BSUIEvent storedEvent, previousEvent;
     private BSUIEventListener bsuiEventListener;
 
     public void setBSUIEventListener(BSUIEventListener bsuiEventListener) {
@@ -69,7 +69,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
     private void fireEvent(BSUIEvent event) {
         if (bsuiEventListener == null) return;
-        if (previousEvent == null) Debug.stopwatchStart();
+        if (storedEvent == null) Debug.stopwatchStart();
 
         BSUIEvent adjustedEvent = event;
         ConfigHelper.StrokeOrientation orientation =
@@ -79,6 +79,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         adjustedEvent = handleDoubleStroke(event, adjustedEvent);
 
         if (adjustedEvent != null) {
+            previousEvent = adjustedEvent;
             bsuiEventListener.onBSUIEvent(adjustedEvent);
             Debug.toastStopwatch("ParseTouchEvent()");
         }
@@ -104,16 +105,16 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         switch (event) {
             case STROKE_UP:
             case STROKE_DOWN:
-                if (previousEvent == event) {
+                if (storedEvent == event) {
                     adjustedEvent = BSUIEvent.getDoubledStroke(event);
-                    previousEvent = null;
+                    storedEvent = null;
                 } else {
-                    previousEvent = adjustedEvent;
+                    storedEvent = adjustedEvent;
                     adjustedEvent = null;
                 }
                 break;
             default:
-                previousEvent = null;
+                storedEvent = null;
                 break;
         }
 
@@ -121,15 +122,15 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (previousEvent == null) return;
-                switch (previousEvent) {
+                if (storedEvent == null) return;
+                switch (storedEvent) {
                     case STROKE_UP:
                     case STROKE_DOWN:
-                        bsuiEventListener.onBSUIEvent(previousEvent);
+                        bsuiEventListener.onBSUIEvent(storedEvent);
                         Debug.toastStopwatch("ParseTouchEvent()");
                         break;
                 }
-                previousEvent = null;
+                storedEvent = null;
             }
         }, DELAY_BETWEEN_DOUBLE_STROKE_MS);
         return adjustedEvent;
@@ -161,5 +162,9 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
     public interface BSUIEventListener {
         public void onBSUIEvent(BSUIEvent event);
+    }
+
+    public BSUIEvent getPreviousEvent() {
+        return previousEvent;
     }
 }

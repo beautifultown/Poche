@@ -37,6 +37,15 @@ public class Debug {
     }
 
     /**
+     * Doing this quite a log
+     * @param color
+     */
+    public static void logColor(int color) {
+        if (!isDebug) return;
+        Log.w("Color via Debug.java: ", String.format("0x%08X", color));
+    }
+
+    /**
      * Wrapper for showing toast in debug mode.
      * @param message message to be printed in log
      * @param duration time length to be shown (See {@link Toast})
