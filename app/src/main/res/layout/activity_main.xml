@@ -94,7 +94,27 @@
         <RelativeLayout
             android:id="@+id/main_Control_Layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:clipToPadding="false">
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="-90"
+                android:tag="bracket"
+                android:src="@drawable/bracket_double"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="-90"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
 
             <ImageView
                 android:layout_width="@dimen/font_size_medium"
@@ -121,6 +141,15 @@
                 android:src="@drawable/prev_track"/>
 
             <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:rotation="180"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
+
+            <ImageView
                 android:layout_width="@dimen/font_size_medium"
                 android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="20dp"
@@ -137,6 +166,14 @@
                 android:src="@drawable/next_track"/>
 
             <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
+
+            <ImageView
                 android:layout_width="@dimen/font_size_medium"
                 android:layout_height="@dimen/font_size_mini"
                 android:layout_margin="40dp"
@@ -151,6 +188,25 @@
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
                 android:src="@drawable/shuffle"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="90"
+                android:tag="bracket"
+                android:src="@drawable/bracket"/>
+
+            <ImageView
+                android:layout_width="@dimen/font_size_large"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="90"
+                android:tag="bracket"
+                android:src="@drawable/bracket_double"/>
 
         </RelativeLayout>
 

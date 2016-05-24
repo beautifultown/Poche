@@ -295,9 +295,14 @@ public class MainActivity extends AppCompatActivity
         positionTextView.setTextColor(color1);
         seekBarImageView.setBackgroundColor(color1);
 
+        int color2ReducedOpacacity = color2 - 0xAA000000;
         for (int i=0; i < controlLayout.getChildCount(); i++) {
             ImageView iv = (ImageView) controlLayout.getChildAt(i);
-            iv.setColorFilter(color2, PorterDuff.Mode.SRC_IN);
+            if(iv.getTag() == null) {
+                iv.setColorFilter(color2, PorterDuff.Mode.SRC_IN);
+            } else {
+                iv.setColorFilter(color2ReducedOpacacity, PorterDuff.Mode.SRC_IN);
+            }
         }
     }
 
