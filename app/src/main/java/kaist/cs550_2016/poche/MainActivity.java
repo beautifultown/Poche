@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity
     private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
     private AsyncTask tick, albumArtTransition;
     private Bitmap nextAlbumArt;
+    private int prevAlbumAvg, nextAlbumAvg;
     private BSUI bsui;
 
     private boolean directionLeft;
@@ -267,6 +268,9 @@ public class MainActivity extends AppCompatActivity
         }
         if(nextAlbumArt == null) {
             albumArtImageView.setImageBitmap(albumArt);
+            updateBGColor(getAverageColor(albumArt));
+            nextAlbumArt = albumArt;
+            nextAlbumAvg = getAverageColor(albumArt);
         } else {
             if (albumArtTransition != null) {
                 albumArtTransition.cancel(true);
@@ -276,6 +280,8 @@ public class MainActivity extends AppCompatActivity
             int direction = directionLeft ? 0 : 1;
             albumArtTransition = new AlbumArtTransition().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 500, 1000/60, direction);
         }
+        prevAlbumAvg = nextAlbumAvg;
+        nextAlbumAvg = getAverageColor(albumArt);
         nextAlbumArt = albumArt;
         Debug.log("Title: ", trackTitle);
         Debug.log("Artist: ", trackArtist);
@@ -283,11 +289,35 @@ public class MainActivity extends AppCompatActivity
         titleTextView.setText(trackTitle);
         artistTextView.setText(trackArtist);
         durationTextView.setText(trackLength);
+    }
 
-        // update colors
-        int avg = getAverageColor(albumArt);
+    /**
+     * Updates the UI animation during track transition
+     * @param progress assumed to be [0, 1]
+     * @param direction false is left to right, true is right to left
+     */
+    private void updateAlbumArt(float progress, boolean direction){
+        reloadUIElements();
+        if(progress >= 1) {
+            albumArtImageView.setImageBitmap(nextAlbumArt);
+            nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
+            updateBGColor(nextAlbumAvg);
+        } else {
+            // if next track
+            // i.e. next album art coming in from the right
+            if(direction) {
+                nextAlbumArtImageView.setX(100 * (1 - progress) * pxPerWidthPercentage);
+            } else {
+                nextAlbumArtImageView.setX(-100 * (1 - progress) * pxPerWidthPercentage);
+            }
+
+            updateBGColor(getMixedColor(prevAlbumAvg, nextAlbumAvg, progress));
+        }
+    }
+
+    private void updateBGColor(int avg) {
         PercentRelativeLayout rootLayout = (PercentRelativeLayout) findViewById(R.id.main_Root);
-        rootLayout.setBackgroundColor(0xFF000000 + avg);
+        rootLayout.setBackgroundColor(avg);
 
         int r = (0xFF0000 & avg) / 0x10000;
         int g = (0x00FF00 & avg) / 0x100;
@@ -296,9 +326,9 @@ public class MainActivity extends AppCompatActivity
         max =  max>b ? max : b;
         float darkerRatio = 0.4f;
         float lighterRatio = 0.6f;
-        int darkerAvg = 0xFF000000 + getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        int darkerAvg = getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
         int lightMod = (int) ((255-max) * lighterRatio);
-        int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
+        int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod;
         int color1, color2;
         double brightnessDelta = (r + g + b) * 0.6;
         // if too little difference, boost text color so it's brighter than the background
@@ -306,12 +336,12 @@ public class MainActivity extends AppCompatActivity
         if (brightnessDelta < 300) {
             color1 = lighterAvg;
             float color2Ratio = 1/darkerRatio;
-            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
-        // and if the average color is not dark
+            color2 = getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+            // and if the average color is not dark
         } else {
             color1 = darkerAvg;
             float color2Ratio = darkerRatio * 1.7f;
-            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+            color2 = getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
         }
         titleTextView.setTextColor(color1);
         artistTextView.setTextColor(color1);
@@ -328,26 +358,6 @@ public class MainActivity extends AppCompatActivity
             } else {
                 iv.setColorFilter(color2ReducedOpacacity, PorterDuff.Mode.SRC_IN);
             }
-        }
-    }
-
-    /**
-     * Updates the UI animation during track transition
-     * @param progress assumed to be [0, 1]
-     * @param direction false is left to right, true is right to left
-     */
-    private void updateAlbumArt(float progress, boolean direction){
-        reloadUIElements();
-        // if next track
-        // i.e. next album art coming in from the right
-        if(direction) {
-            nextAlbumArtImageView.setX(100 * (1 - progress) * pxPerWidthPercentage);
-        } else {
-            nextAlbumArtImageView.setX(-100 * (1 - progress) * pxPerWidthPercentage);
-        }
-        if(progress >= 1) {
-            albumArtImageView.setImageBitmap(nextAlbumArt);
-            nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
         }
     }
 
@@ -410,8 +420,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Returns an int that contains RGB information as 0xRRGGBB
-     * Might need to add 0xFF000000 if using for ARGB
+     * Returns an int that contains ARGB information as 0xFFRRGGBB
      * Clips input to [0, 255]
      * @param r
      * @param g
@@ -428,7 +437,35 @@ public class MainActivity extends AppCompatActivity
         int output = 0x10000 * r;
         output += 0x100 * g;
         output += b;
-        return output;
+        return output + 0xFF000000;
+    }
+
+    /**
+     * Gets a mix of the two colors with ratio amount of weight to the first color
+     * Assumes both are 100% opaque
+     * @param a
+     * @param b
+     * @param ratio
+     * @return
+     */
+    private int getMixedColor(int a, int b, float ratio) {
+        long r1, r2, g1, g2, b1, b2;
+        r1 = (a & 0xFF0000) / 0x10000;
+        r1 *= r1;
+        g1 = (a & 0x00FF00) / 0x100;
+        g1 *= g1;
+        b1 = a & 0x0000FF;
+        b1 *= b1;
+        r2 = (a & 0xFF0000) / 0x10000;
+        r2 *= r2;
+        g2 = (a & 0x00FF00) / 0x100;
+        g2 *= g2;
+        b2 = a & 0x0000FF;
+        b2 *= b2;
+        r2 = (long) Math.sqrt((((float) r2) * ratio + ((float) r1) * (1-ratio)));
+        g2 = (long) Math.sqrt((((float) g2) * ratio + ((float) g1) * (1-ratio)));
+        b2 = (long) Math.sqrt((((float) b2) * ratio + ((float) b1) * (1-ratio)));
+        return getColorInt((int) r2, (int) g2, (int) b2);
     }
 
     /**
