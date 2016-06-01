@@ -123,9 +123,8 @@ public class PlaylistActivity extends AppCompatActivity
     private void PlayTrack(Object track) {
         Intent intent = new Intent(PlaylistActivity.this, MainActivity.class);
         if (track instanceof File) {
-            intent.setData(Uri.fromFile((File)track));
-        }
-        else {
+            intent.setData(Uri.fromFile((File) track));
+        } else {
             intent.setData(Uri.parse(track.toString()));
         }
         startActivity(intent);

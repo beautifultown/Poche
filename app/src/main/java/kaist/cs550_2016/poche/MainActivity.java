@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -49,18 +50,19 @@ public class MainActivity extends AppCompatActivity
     private MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder;
     private AsyncTask tick, albumArtTransition;
     private Bitmap nextAlbumArt;
+
     private BSUI bsui;
 
     private boolean directionLeft;
-    private int uiUpdateFrameRate = 1000/30;
-    private int albumArtTransitionFrameRate = 1000/60;
+    private int uiUpdateFrameRate = 1000 / 30;
+    private int albumArtTransitionFrameRate = 1000 / 60;
 
     /**
      * The total length of the track in ms
      */
     private int trackDuration;
     private int screenWidth, screenHeight;
-//    private float pxPerDip;
+    //    private float pxPerDip;
     private float pxPerWidthPercentage, pxPerHeightPercentage;
 
     @Override
@@ -220,7 +222,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void adjustVolume(int volumeAdjustCommand) {
-        AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
                 volumeAdjustCommand, AudioManager.FLAG_SHOW_UI);
     }
@@ -238,6 +240,7 @@ public class MainActivity extends AppCompatActivity
     /**
      * Retrieves metadata from the current track and displays them on the UI
      * Should be used only once per track
+     *
      * @param uri
      */
     private void updateMetadata(Uri uri) {
@@ -254,7 +257,7 @@ public class MainActivity extends AppCompatActivity
         try {
             trackArtist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
         } catch (Exception e) {
-            trackArtist = "No Artist Information";
+            trackArtist = getString(R.string.main_noartist);
         }
 
         // Android API returns the track length in milliseconds as a String
@@ -264,21 +267,22 @@ public class MainActivity extends AppCompatActivity
         try {
             byte[] bytearr = retriever.getEmbeddedPicture();
             albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(),
                     R.drawable.random_album_art);
         }
-        if(nextAlbumArt == null) {
+        if (nextAlbumArt == null) {
             albumArtImageView.setImageBitmap(albumArt);
         } else {
             if (albumArtTransition != null) {
                 albumArtTransition.cancel(true);
                 albumArtImageView.setImageBitmap(nextAlbumArt);
             }
-            nextAlbumArtImageView.setImageBitmap(Bitmap.createScaledBitmap(albumArt, screenWidth/10, screenWidth/10, true));
+            nextAlbumArtImageView.setImageBitmap(
+                    Bitmap.createScaledBitmap(albumArt, screenWidth / 10, screenWidth / 10, true));
             int direction = directionLeft ? 0 : 1;
-            albumArtTransition = new AlbumArtTransition().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 500, albumArtTransitionFrameRate, direction);
+            albumArtTransition = new AlbumArtTransition().executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR, 500, albumArtTransitionFrameRate, direction);
         }
         nextAlbumArt = albumArt;
         Debug.log("Title: ", trackTitle);
@@ -290,18 +294,18 @@ public class MainActivity extends AppCompatActivity
 
         // update colors
         int avg = getAverageColor(albumArt);
-        PercentRelativeLayout rootLayout = (PercentRelativeLayout) findViewById(R.id.main_Root);
+        View rootLayout = findViewById(R.id.main_Root);
         rootLayout.setBackgroundColor(0xFF000000 + avg);
 
-        int r = (0xFF0000 & avg) / 0x10000;
-        int g = (0x00FF00 & avg) / 0x100;
-        int b = 0x0000FF & avg;
-        int max = r>g ? r : g;
-        max =  max>b ? max : b;
+        int r = Color.red(avg);
+        int g = Color.green(avg);
+        int b = Color.blue(avg);
+        int max = Math.max(r, Math.max(g, b));
         float darkerRatio = 0.4f;
         float lighterRatio = 0.6f;
-        int darkerAvg = 0xFF000000 + getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
-        int lightMod = (int) ((255-max) * lighterRatio);
+        int darkerAvg = 0xFF000000 +
+                getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        int lightMod = (int)((255 - max) * lighterRatio);
         int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
         int color1, color2;
         double brightnessDelta = (r + g + b) * 0.6;
@@ -309,13 +313,15 @@ public class MainActivity extends AppCompatActivity
         // arbitrary threshold that felt good enough
         if (brightnessDelta < 300) {
             color1 = lighterAvg;
-            float color2Ratio = 1/darkerRatio;
-            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
-        // and if the average color is not dark
+            float color2Ratio = 1 / darkerRatio;
+            color2 = 0xFF000000 +
+                    getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+            // and if the average color is not dark
         } else {
             color1 = darkerAvg;
             float color2Ratio = darkerRatio * 1.7f;
-            color2 = 0xFF000000 + getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+            color2 = 0xFF000000 +
+                    getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
         }
         titleTextView.setTextColor(color1);
         artistTextView.setTextColor(color1);
@@ -325,9 +331,9 @@ public class MainActivity extends AppCompatActivity
         seekBarImageView.setBackgroundColor(color1);
 
         int color2ReducedOpacacity = color2 - 0xAA000000;
-        for (int i=0; i < controlLayout.getChildCount(); i++) {
+        for (int i = 0; i < controlLayout.getChildCount(); i++) {
             ImageView iv = (ImageView) controlLayout.getChildAt(i);
-            if(iv.getTag() == null) {
+            if (iv.getTag() == null) {
                 iv.setColorFilter(color2, PorterDuff.Mode.SRC_IN);
             } else {
                 iv.setColorFilter(color2ReducedOpacacity, PorterDuff.Mode.SRC_IN);
@@ -337,19 +343,20 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Updates the UI animation during track transition
-     * @param progress assumed to be [0, 1]
+     *
+     * @param progress  assumed to be [0, 1]
      * @param direction false is left to right, true is right to left
      */
-    private void updateAlbumArt(float progress, boolean direction){
+    private void updateAlbumArt(float progress, boolean direction) {
         reloadUIElements();
         // if next track
         // i.e. next album art coming in from the right
-        if(direction) {
+        if (direction) {
             nextAlbumArtImageView.setX(100 * (1 - progress) * pxPerWidthPercentage);
         } else {
             nextAlbumArtImageView.setX(-100 * (1 - progress) * pxPerWidthPercentage);
         }
-        if(progress >= 1) {
+        if (progress >= 1) {
             albumArtImageView.setImageBitmap(nextAlbumArt);
             nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
         }
@@ -359,7 +366,7 @@ public class MainActivity extends AppCompatActivity
      * Updates the seek bar and the current time TextView
      */
     private void updateTrackTime() {
-        if(mediaPlayerServiceBinder == null) return;
+        if (mediaPlayerServiceBinder == null) return;
 
         int seconds = mediaPlayerServiceBinder.getCurrentPosition();
         positionTextView.setText(millisecondsToMinutesAndSeconds(seconds));
@@ -371,15 +378,16 @@ public class MainActivity extends AppCompatActivity
      * Returns the input time as a String of minutes : seconds
      * Rounds up
      * e.g. 219921 -> 3:40
+     *
      * @param ms Time in milliseconds
      * @return
      */
     private String millisecondsToMinutesAndSeconds(int ms) {
-        float seconds = ((float)(ms % 60000)) / 1000;
+        float seconds = ((float) (ms % 60000)) / 1000;
         int secs = (int) seconds;
         if (seconds > secs)
             secs++;
-        String suffix = secs<10 ? ":0" + secs : ":" + secs;
+        String suffix = secs < 10 ? ":0" + secs : ":" + secs;
         int mins = ms / 60000;
         return "" + mins + suffix;
     }
@@ -387,6 +395,7 @@ public class MainActivity extends AppCompatActivity
     /**
      * Uses getColorInt() for finalizing the return value
      * If too computationally expensive, just increase the stride
+     *
      * @param bmp
      * @return
      */
@@ -399,9 +408,9 @@ public class MainActivity extends AppCompatActivity
         long totalG = 0;
         long totalB = 0;
         for (int px : pixels) {
-            int r = (0xFF0000 & px) / 0x10000;
-            int g = (0x00FF00 & px) / 0x100;
-            int b = 0x0000FF & px;
+            int r = Color.red(px);
+            int g = Color.green(px);
+            int b = Color.blue(px);
             totalR += r * r;
             totalG += g * g;
             totalB += b * b;
@@ -416,22 +425,17 @@ public class MainActivity extends AppCompatActivity
      * Returns an int that contains RGB information as 0xRRGGBB
      * Might need to add 0xFF000000 if using for ARGB
      * Clips input to [0, 255]
+     *
      * @param r
      * @param g
      * @param b
      * @return
      */
     private int getColorInt(int r, int g, int b) {
-        r = r<0 ? 0 : r;
-        r = r>255? 255 : r;
-        g = g<0 ? 0 : g;
-        g = g>255? 255 : g;
-        b = b<0 ? 0 : b;
-        b = b>255? 255 : b;
-        int output = 0x10000 * r;
-        output += 0x100 * g;
-        output += b;
-        return output;
+        r = Math.max(0, Math.min(255, r));
+        g = Math.max(0, Math.min(255, g));
+        b = Math.max(0, Math.min(255, b));
+        return Color.rgb(r,g,b);
     }
 
     /**
@@ -443,11 +447,12 @@ public class MainActivity extends AppCompatActivity
          * args[0] == tick interval in ms
          * e.g. if input is [100] the task is run at most 10Hz
          * Just like update(), there is no guarantee of maintaining 10Hz
+         *
          * @param args
          * @return
          */
         protected Integer doInBackground(Integer... args) {
-            while(true) {
+            while (true) {
                 try {
                     Thread.sleep(args[0]);
                     publishProgress(0);
@@ -459,6 +464,7 @@ public class MainActivity extends AppCompatActivity
 
         /**
          * Does not use any inputs
+         *
          * @param args
          */
         protected void onProgressUpdate(Integer... args) {
@@ -476,17 +482,18 @@ public class MainActivity extends AppCompatActivity
          * args[1] == tick interval in ms
          * args[2] == direction. 0 is Prev, 1 is Next
          * Does not guarantee constant tick rate.
+         *
          * @param args
          * @return
          */
-        protected Integer doInBackground(Integer ... args) {
+        protected Integer doInBackground(Integer... args) {
             long timeBeforeSleep = System.currentTimeMillis();
             int timeElapsed = 0;
             int timeTarget = args[0];
             int timeTick = args[1];
             int direction = args[2];
             Assert.assertTrue(direction == 0 || direction == 1);
-            while(timeElapsed < timeTarget) {
+            while (timeElapsed < timeTarget) {
                 try {
                     Thread.sleep(timeTick);
                     timeElapsed += System.currentTimeMillis() - timeBeforeSleep;
@@ -503,8 +510,11 @@ public class MainActivity extends AppCompatActivity
          * args[0] == time elapsed as a ratio of time elapsed vs total time
          * args[1] == direction. 0 is Left, 1 is Right.
          * No error checking
+         *
          * @param args
          */
-        protected void onProgressUpdate(Float ... args) { updateAlbumArt(args[0], args[1] > 0); }
+        protected void onProgressUpdate(Float... args) {
+            updateAlbumArt(args[0], args[1] > 0);
+        }
     }
 }
