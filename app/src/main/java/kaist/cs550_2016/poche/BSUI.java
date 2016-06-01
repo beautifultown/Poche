@@ -12,8 +12,8 @@ import android.view.MotionEvent;
 public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
     private static final long DELAY_BETWEEN_DOUBLE_STROKE_MS = 480;
-    private static final double STROKE_DEADZONE_ANGLE_DEGREE = 5;
-    private static final double STROKE_MINIMUM_DISTANCE_PX = 400;
+    private static final double STROKE_DEADZONE_ANGLE_DEGREE = 10;
+    private static final double STROKE_MINIMUM_DISTANCE_PX = 200;
 
     private BSUIEvent storedEvent, previousEvent;
     private BSUIEventListener bsuiEventListener;
