@@ -8,13 +8,14 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.percent.PercentRelativeLayout;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -51,6 +52,11 @@ public class MainActivity extends AppCompatActivity
     private AsyncTask tick, albumArtTransition;
     private Bitmap nextAlbumArt;
 
+    private int defaultBackgroundColor;
+    private int defaultTextColor;
+
+    private boolean isFirstTrack;
+
     private BSUI bsui;
 
     private boolean directionLeft;
@@ -80,11 +86,13 @@ public class MainActivity extends AppCompatActivity
             Debug.toastStopwatch("Parse()");
 
         } catch (IOException e) {
-            Toast.makeText(this, R.string.toast_fail_parseplaylist, Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    R.string.toast_fail_parseplaylist, Toast.LENGTH_LONG).show();
             e.printStackTrace();
             finish();
         }
 
+        isFirstTrack = true;
         bindService(new Intent(getBaseContext(), MediaPlayerService.class),
                 connection, BIND_AUTO_CREATE);
         // Start media playback in onServiceConnected
@@ -116,21 +124,7 @@ public class MainActivity extends AppCompatActivity
         pxPerHeightPercentage = ((float) screenHeight) / 100;
         pxPerWidthPercentage = ((float) screenWidth) / 100;
 
-        nextAlbumArt = null;
-        reloadUIElements();
-        positionTextView.setText("0:00");
-        seekBarImageView.setX(-100 * pxPerWidthPercentage);
-        nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
-
-        tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
-    }
-
-    /**
-     * Android automatically garbage collects these. Call before using the variables.
-     * Probably garbage collects for a good reason?
-     * Might need to improve later if there are memory problems.
-     */
-    private void reloadUIElements() {
+        // Android does not GC on strongly referenced variables!
         titleTextView = (TextView) findViewById(R.id.main_TextTitle);
         artistTextView = (TextView) findViewById(R.id.main_TextArtist);
         durationTextView = (TextView) findViewById(R.id.main_TextDuration);
@@ -140,6 +134,16 @@ public class MainActivity extends AppCompatActivity
         nextAlbumArtImageView = (ImageView) findViewById(R.id.main_NextImageAlbumArt);
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
         controlLayout = (RelativeLayout) findViewById(R.id.main_Control_Layout);
+
+        ColorDrawable backgroundColor = ((ColorDrawable) findViewById(R.id.main_Root).getBackground());
+        defaultBackgroundColor = backgroundColor.getColor();
+        defaultTextColor = titleTextView.getCurrentTextColor();
+
+        positionTextView.setText("0:00");
+        seekBarImageView.setX(-100 * pxPerWidthPercentage);
+        nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
+
+        tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -197,9 +201,9 @@ public class MainActivity extends AppCompatActivity
     public void PlayTrack() {
         if (mediaPlayerServiceBinder == null) return;
 
-        Uri fileURI = playlist.GetCurrentTrack();
-        mediaPlayerServiceBinder.setTrack(fileURI);
-        updateMetadata(fileURI);
+        Uri uri = playlist.GetCurrentTrack();
+        mediaPlayerServiceBinder.setTrack(uri);
+        updateMetadata(uri);
         directionLeft = false;
     }
 
@@ -264,27 +268,7 @@ public class MainActivity extends AppCompatActivity
         trackDuration = Integer.parseInt(
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
         String trackLength = millisecondsToMinutesAndSeconds(trackDuration);
-        try {
-            byte[] bytearr = retriever.getEmbeddedPicture();
-            albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
-        } catch (Exception e) {
-            albumArt = BitmapFactory.decodeResource(getApplicationContext().getResources(),
-                    R.drawable.random_album_art);
-        }
-        if (nextAlbumArt == null) {
-            albumArtImageView.setImageBitmap(albumArt);
-        } else {
-            if (albumArtTransition != null) {
-                albumArtTransition.cancel(true);
-                albumArtImageView.setImageBitmap(nextAlbumArt);
-            }
-            nextAlbumArtImageView.setImageBitmap(
-                    Bitmap.createScaledBitmap(albumArt, screenWidth / 10, screenWidth / 10, true));
-            int direction = directionLeft ? 0 : 1;
-            albumArtTransition = new AlbumArtTransition().executeOnExecutor(
-                    AsyncTask.THREAD_POOL_EXECUTOR, 500, albumArtTransitionFrameRate, direction);
-        }
-        nextAlbumArt = albumArt;
+
         Debug.log("Title: ", trackTitle);
         Debug.log("Artist: ", trackArtist);
         Debug.log("Length: ", trackLength);
@@ -292,37 +276,90 @@ public class MainActivity extends AppCompatActivity
         artistTextView.setText(trackArtist);
         durationTextView.setText(trackLength);
 
-        // update colors
-        int avg = getAverageColor(albumArt);
-        View rootLayout = findViewById(R.id.main_Root);
-        rootLayout.setBackgroundColor(0xFF000000 + avg);
-
-        int r = Color.red(avg);
-        int g = Color.green(avg);
-        int b = Color.blue(avg);
-        int max = Math.max(r, Math.max(g, b));
-        float darkerRatio = 0.4f;
-        float lighterRatio = 0.6f;
-        int darkerAvg = 0xFF000000 +
-                getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
-        int lightMod = (int)((255 - max) * lighterRatio);
-        int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
-        int color1, color2;
-        double brightnessDelta = (r + g + b) * 0.6;
-        // if too little difference, boost text color so it's brighter than the background
-        // arbitrary threshold that felt good enough
-        if (brightnessDelta < 300) {
-            color1 = lighterAvg;
-            float color2Ratio = 1 / darkerRatio;
-            color2 = 0xFF000000 +
-                    getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
-            // and if the average color is not dark
-        } else {
-            color1 = darkerAvg;
-            float color2Ratio = darkerRatio * 1.7f;
-            color2 = 0xFF000000 +
-                    getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+        try {
+            byte[] bytearr = retriever.getEmbeddedPicture();
+            albumArt = BitmapFactory.decodeByteArray(bytearr, 0, bytearr.length);
+        } catch (Exception e) {
+            albumArt = null;
+            //BitmapFactory.decodeResource(getApplicationContext().getResources(),R.drawable.random_album_art);
         }
+
+        if (isFirstTrack) {
+            if (albumArt != null) {
+                albumArtImageView.setImageBitmap(albumArt);
+            }
+            else {
+                albumArtImageView.setImageResource(R.drawable.random_album_art);
+            }
+            isFirstTrack = false;
+        }
+        else {
+            if (albumArtTransition != null) {
+                albumArtTransition.cancel(true);
+                if (nextAlbumArt != null) {
+                    albumArtImageView.setImageBitmap(nextAlbumArt);
+                }
+                else {
+                    albumArtImageView.setImageResource(R.drawable.random_album_art);
+                }
+            }
+
+            if (albumArt != null) {
+                nextAlbumArtImageView.setImageBitmap(albumArt);
+            }
+            else {
+                nextAlbumArtImageView.setImageResource(R.drawable.random_album_art);
+            }
+            int direction = directionLeft ? 0 : 1;
+            albumArtTransition = new AlbumArtTransition().executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR, 500, albumArtTransitionFrameRate, direction);
+        }
+
+        nextAlbumArt = albumArt;
+        setColorForAlbumArt(albumArt);
+    }
+
+    private void setColorForAlbumArt(@Nullable Bitmap albumArt) {
+        int color1, color2;
+
+        if (albumArt != null) {
+            // update colors
+            int avg = getAverageColor(albumArt);
+            View rootLayout = findViewById(R.id.main_Root);
+            rootLayout.setBackgroundColor(0xFF000000 + avg);
+
+            int r = Color.red(avg);
+            int g = Color.green(avg);
+            int b = Color.blue(avg);
+            int max = Math.max(r, Math.max(g, b));
+            float darkerRatio = 0.4f;
+            float lighterRatio = 0.6f;
+            int darkerAvg = 0xFF000000 +
+                    getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+            int lightMod = (int)((255 - max) * lighterRatio);
+            int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
+            double brightnessDelta = (r + g + b) * 0.6;
+            // if too little difference, boost text color so it's brighter than the background
+            // arbitrary threshold that felt good enough
+            if (brightnessDelta < 300) {
+                color1 = lighterAvg;
+                float color2Ratio = 1 / darkerRatio;
+                color2 = 0xFF000000 +
+                        getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+                // and if the average color is not dark
+            } else {
+                color1 = darkerAvg;
+                float color2Ratio = darkerRatio * 1.7f;
+                color2 = 0xFF000000 +
+                        getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+            }
+        }
+        else {
+            findViewById(R.id.main_Root).setBackgroundColor(defaultBackgroundColor);
+            color1 = defaultTextColor;
+            color2 = 0xAA000000;
+        }
+
         titleTextView.setTextColor(color1);
         artistTextView.setTextColor(color1);
         durationTextView.setTextColor(color1);
@@ -348,7 +385,6 @@ public class MainActivity extends AppCompatActivity
      * @param direction false is left to right, true is right to left
      */
     private void updateAlbumArt(float progress, boolean direction) {
-        reloadUIElements();
         // if next track
         // i.e. next album art coming in from the right
         if (direction) {
@@ -357,7 +393,12 @@ public class MainActivity extends AppCompatActivity
             nextAlbumArtImageView.setX(-100 * (1 - progress) * pxPerWidthPercentage);
         }
         if (progress >= 1) {
-            albumArtImageView.setImageBitmap(nextAlbumArt);
+            if (nextAlbumArt != null) {
+                albumArtImageView.setImageBitmap(nextAlbumArt);
+            }
+            else {
+                albumArtImageView.setImageResource(R.drawable.random_album_art);
+            }
             nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
         }
     }
@@ -420,6 +461,8 @@ public class MainActivity extends AppCompatActivity
         totalB = (int) Math.sqrt(totalB / totalCount);
         return getColorInt((int) totalR, (int) totalG, (int) totalB);
     }
+
+
 
     /**
      * Returns an int that contains RGB information as 0xRRGGBB
