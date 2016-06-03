@@ -16,6 +16,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -52,8 +53,7 @@ public class MainActivity extends AppCompatActivity
     private AsyncTask tick, albumArtTransition;
     private Bitmap nextAlbumArt;
 
-    private int defaultBackgroundColor;
-    private int defaultTextColor;
+    private int defaultAlbumArtAvarageColor;
 
     private boolean isFirstTrack;
 
@@ -135,13 +135,12 @@ public class MainActivity extends AppCompatActivity
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
         controlLayout = (RelativeLayout) findViewById(R.id.main_Control_Layout);
 
-        ColorDrawable backgroundColor = ((ColorDrawable) findViewById(R.id.main_Root).getBackground());
-        defaultBackgroundColor = backgroundColor.getColor();
-        defaultTextColor = titleTextView.getCurrentTextColor();
-
         positionTextView.setText("0:00");
         seekBarImageView.setX(-100 * pxPerWidthPercentage);
         nextAlbumArtImageView.setX(100 * pxPerWidthPercentage);
+
+        defaultAlbumArtAvarageColor =
+                ContextCompat.getColor(this, R.color.colorDefaultAlbumArtAverage);
 
         tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
     }
@@ -321,43 +320,37 @@ public class MainActivity extends AppCompatActivity
 
     private void setColorForAlbumArt(@Nullable Bitmap albumArt) {
         int color1, color2;
+        int averageColor = albumArt != null ? getAverageColor(albumArt) : defaultAlbumArtAvarageColor;
+        View rootLayout = findViewById(R.id.main_Root);
 
-        if (albumArt != null) {
-            // update colors
-            int avg = getAverageColor(albumArt);
-            View rootLayout = findViewById(R.id.main_Root);
-            rootLayout.setBackgroundColor(0xFF000000 + avg);
+        // update colors
+        rootLayout.setBackgroundColor(0xFF000000 + averageColor);
 
-            int r = Color.red(avg);
-            int g = Color.green(avg);
-            int b = Color.blue(avg);
-            int max = Math.max(r, Math.max(g, b));
-            float darkerRatio = 0.4f;
-            float lighterRatio = 0.6f;
-            int darkerAvg = 0xFF000000 +
-                    getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
-            int lightMod = (int)((255 - max) * lighterRatio);
-            int lighterAvg = avg + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
-            double brightnessDelta = (r + g + b) * 0.6;
-            // if too little difference, boost text color so it's brighter than the background
-            // arbitrary threshold that felt good enough
-            if (brightnessDelta < 300) {
-                color1 = lighterAvg;
-                float color2Ratio = 1 / darkerRatio;
-                color2 = 0xFF000000 +
-                        getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
-                // and if the average color is not dark
-            } else {
-                color1 = darkerAvg;
-                float color2Ratio = darkerRatio * 1.7f;
-                color2 = 0xFF000000 +
-                        getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
-            }
-        }
-        else {
-            findViewById(R.id.main_Root).setBackgroundColor(defaultBackgroundColor);
-            color1 = defaultTextColor;
-            color2 = 0xAA000000;
+        int r = Color.red(averageColor);
+        int g = Color.green(averageColor);
+        int b = Color.blue(averageColor);
+        int max = Math.max(r, Math.max(g, b));
+        final float darkerRatio = 0.4f;
+        final float lighterRatio = 0.6f;
+        int darkerAvg = 0xFF000000 +
+                getColorInt((int) (r * darkerRatio), (int) (g * darkerRatio), (int) (b * darkerRatio));
+        int lightMod = (int)((255 - max) * lighterRatio);
+        int lighterAvg = averageColor + lightMod * 0x10000 + lightMod * 0x100 + lightMod + 0xFF000000;
+        double brightnessDelta = (r + g + b) * 0.6;
+
+        // if too little difference, boost text color so it's brighter than the background
+        // arbitrary threshold that felt good enough
+        if (brightnessDelta < 300) {
+            color1 = lighterAvg;
+            float color2Ratio = 1 / darkerRatio;
+            color2 = 0xFF000000 +
+                    getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
+            // and if the average color is not dark
+        } else {
+            color1 = darkerAvg;
+            float color2Ratio = darkerRatio * 1.7f;
+            color2 = 0xFF000000 +
+                    getColorInt((int) (r * color2Ratio), (int) (g * color2Ratio), (int) (b * color2Ratio));
         }
 
         titleTextView.setTextColor(color1);

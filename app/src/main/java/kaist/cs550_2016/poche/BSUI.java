@@ -164,7 +164,4 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         public void onBSUIEvent(BSUIEvent event);
     }
 
-    public BSUIEvent getPreviousEvent() {
-        return previousEvent;
-    }
 }

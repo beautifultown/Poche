@@ -32,6 +32,7 @@ public class ConfigHelper {
      * Mainly used for iterating items in {@link ConfigActivity}
      */
     public static final String[] KEY_ALL_CONFIGS_IN_CONFIGACTIVITY = {
+            KEY_PLAYORDER,
             KEY_STROKEORIENTATION,
             KEY_WAKELOCK
     };
@@ -85,6 +86,45 @@ public class ConfigHelper {
 
         playOrder = null;
         getPlayOrder();
+    }
+
+    // Play order mode
+    public enum PlayOrder {
+        /**
+         * Play order - Sequential order defined by playlist.
+         */
+        ORDERED,
+        /**
+         * Play order - Random order defined differently every loading.
+         */
+        SHUFFLE
+    }
+
+    private PlayOrder playOrder;
+
+    /**
+     * Get play order mode.
+     * @return One of play order mode.<br>
+     *          See {@link PlayOrder}
+     */
+    public PlayOrder getPlayOrder() {
+        if (playOrder == null) {
+            String modeString = preferences.getString(KEY_PLAYORDER,
+                    PlayOrder.ORDERED.toString());
+            playOrder = PlayOrder.valueOf(modeString);
+            setPlayOrder(playOrder);
+        }
+        return playOrder;
+    }
+
+    /**
+     * Set play order mode.
+     * @param playOrder One of play order mode.<br>
+     *          See {@link PlayOrder}
+     */
+    public void setPlayOrder(PlayOrder playOrder) {
+        editor.putString(KEY_PLAYORDER, playOrder.toString()).commit();
+        this.playOrder = playOrder;
     }
 
     // Stroke orientation
@@ -173,44 +213,5 @@ public class ConfigHelper {
     public void setWakeLock(boolean isEnabled) {
         editor.putBoolean(KEY_WAKELOCK, isEnabled).commit();
         isWakeLockEnabled = isEnabled;
-    }
-
-    // Play order mode
-    public enum PlayOrder {
-        /**
-         * Play order - Sequential order defined by playlist.
-         */
-        ORDERED,
-        /**
-         * Play order - Random order defined differently every loading.
-         */
-        SHUFFLE
-    }
-
-    private PlayOrder playOrder;
-
-    /**
-     * Get play order mode.
-     * @return One of play order mode.<br>
-     *          See {@link PlayOrder}
-     */
-    public PlayOrder getPlayOrder() {
-        if (playOrder == null) {
-            String modeString = preferences.getString(KEY_PLAYORDER,
-                    PlayOrder.ORDERED.toString());
-            playOrder = PlayOrder.valueOf(modeString);
-            setPlayOrder(playOrder);
-        }
-        return playOrder;
-    }
-
-    /**
-     * Set play order mode.
-     * @param playOrder One of play order mode.<br>
-     *          See {@link PlayOrder}
-     */
-    public void setPlayOrder(PlayOrder playOrder) {
-        editor.putString(KEY_PLAYORDER, playOrder.toString()).commit();
-        this.playOrder = playOrder;
     }
 }

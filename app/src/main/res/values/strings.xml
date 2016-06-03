@@ -1,9 +1,27 @@
 <resources>
+    <!-- Title/menu description -->
     <string name="app_name">Poche</string>
     <string name="action_configuration">Configuration</string>
     <string name="title_activity_config">Configuration</string>
 
+    <!-- Fallback/info messages -->
+    <string name="main_noartist">No artist information</string>
+    <string name="no_playlist">No playlist available.\nPut *.m3u files in /Poche directory.</string>
+
+    <!-- Error messages -->
+    <string name="toast_fail_parseplaylist">There\'re some problems with playlist file!</string>
+
     <!-- Strings related to Configurations -->
+    <string name="pref_playorder">Play order</string>
+    <string-array name="pref_playorder_summary">
+        <item>Ordered</item>
+        <item>Shuffle</item>
+    </string-array>
+    <string-array name="pref_playorder_values">
+        <item>ORDERED</item>
+        <item>SHUFFLE</item>
+    </string-array>
+
     <string name="pref_strokeorientation">Left/Right swipe orientation</string>
     <string-array name="pref_strokeorientation_values">
         <item>Normal</item>
@@ -15,9 +33,4 @@
     </string-array>
     <string name="pref_wakelock">Wake lock</string>
 
-    <string name="main_noartist">No artist information</string>
-
-    <string name="no_playlist">No playlist available.\nPut *.m3u files in /Poche directory.</string>
-
-    <string name="toast_fail_parseplaylist">There\'re some problems with playlist file!</string>
 </resources>
