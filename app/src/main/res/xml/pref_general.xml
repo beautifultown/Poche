@@ -17,6 +17,10 @@
         android:positiveButtonText="@null"/>
 
     <SwitchPreference
+        android:key="STROKEPULL"
+        android:title="Stroke pulls the next track"/>
+
+    <SwitchPreference
         android:key="WAKELOCK"
         android:title="@string/pref_wakelock"/>
 

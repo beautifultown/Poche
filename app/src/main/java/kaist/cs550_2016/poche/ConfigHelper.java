@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import junit.framework.Assert;
+
 /**
  * Created by Leegeun Ha.
  */
@@ -25,6 +27,7 @@ public class ConfigHelper {
     private static final String
             KEY_STROKEORIENTATION = "STROKEORIENTATION",
             KEY_WAKELOCK = "WAKELOCK",
+            KEY_STROKEPULL = "STROKEPULL",
             KEY_PLAYORDER = "PLAYORDER";
 
     /**
@@ -34,6 +37,7 @@ public class ConfigHelper {
     public static final String[] KEY_ALL_CONFIGS_IN_CONFIGACTIVITY = {
             KEY_PLAYORDER,
             KEY_STROKEORIENTATION,
+            KEY_STROKEPULL,
             KEY_WAKELOCK
     };
 
@@ -84,6 +88,9 @@ public class ConfigHelper {
         isWakeLockEnabled = null;
         isWakeLock();
 
+        isStrokePullEnabled = null;
+        isStrokePull();
+
         playOrder = null;
         getPlayOrder();
     }
@@ -129,37 +136,33 @@ public class ConfigHelper {
 
     // Stroke orientation
     public enum StrokeOrientation {
-        /**
-         * Stroke orientation - Left stroke means left; Right stroke means right.
-         */
-        NORMAL("Normal"),
-        /**
-         * Stroke orientation - Left stroke means right; Right stroke means left.
-         */
-        REVERSED("Reversed");
+        NORTH(0),
+        EAST(90),
+        SOUTH(180),
+        WEST(270);
 
-        private String name;
+        private int orientation;
 
-        StrokeOrientation(String name) {
-            this.name = name;
+        StrokeOrientation(int nv) {
+            orientation = nv;
         }
 
-        public String getName() {
-            return this.name;
+        public int getDegree() {
+            return this.orientation;
         }
         public String toString() {
-            return this.name;
-        }
-
-        public static StrokeOrientation fromName(String name) {
-            if (name != null) {
-                for (StrokeOrientation value : StrokeOrientation.values()) {
-                    if (name.equalsIgnoreCase(value.name)) {
-                        return value;
-                    }
-                }
+            switch (this.orientation) {
+                case 0:
+                    return "North";
+                case 90:
+                    return "East";
+                case 180:
+                    return "South";
+                case 270:
+                    return "West";
             }
-            throw new IllegalArgumentException("No constant with text " + name + " found");
+            Assert.assertNotNull(null);;
+            return "Invalid ENUM";
         }
     }
 
@@ -172,9 +175,7 @@ public class ConfigHelper {
      */
     public StrokeOrientation getStrokeOrientation() {
         if (strokeOrientation == null) {
-            String modeString = preferences.getString(KEY_STROKEORIENTATION,
-                    StrokeOrientation.NORMAL.getName());
-            strokeOrientation = StrokeOrientation.fromName(modeString);
+            strokeOrientation = StrokeOrientation.NORTH;
             setStrokeOrientation(strokeOrientation);
         }
         return strokeOrientation;
@@ -186,8 +187,33 @@ public class ConfigHelper {
      *          See {@link StrokeOrientation}
      */
     public void setStrokeOrientation(StrokeOrientation orientation) {
-        editor.putString(KEY_STROKEORIENTATION, orientation.getName()).commit();
+        editor.putInt(KEY_STROKEORIENTATION, orientation.getDegree()).commit();
         strokeOrientation = orientation;
+    }
+
+
+    private Boolean isStrokePullEnabled;
+
+    /**
+     * Checks whether <i>Wake lock</i> is enabled.
+     * @return true if <i>Wake lock</i> is enabled, false otherwise.
+     */
+    public boolean isStrokePull() {
+        if (isStrokePullEnabled == null) {
+            isStrokePullEnabled = preferences.getBoolean(KEY_STROKEPULL, false);
+            setStrokePull(isStrokePullEnabled);
+        }
+
+        return isStrokePullEnabled;
+    }
+
+    /**
+     * Set whether to use <i>Wake lock</i>.
+     * @param isEnabled true to enable, false otherwise.
+     */
+    public void setStrokePull(boolean isEnabled) {
+        editor.putBoolean(KEY_STROKEPULL, isEnabled).commit();
+        isStrokePullEnabled = isEnabled;
     }
 
     // Wake lock

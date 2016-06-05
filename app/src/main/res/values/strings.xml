@@ -22,14 +22,18 @@
         <item>SHUFFLE</item>
     </string-array>
 
-    <string name="pref_strokeorientation">Left/Right swipe orientation</string>
+    <string name="pref_strokeorientation">Swipe orientation</string>
     <string-array name="pref_strokeorientation_values">
-        <item>Normal</item>
-        <item>Reversed</item>
+        <item>0</item>
+        <item>90</item>
+        <item>180</item>
+        <item>270</item>
     </string-array>
     <string-array name="pref_strokeorientation_summary">
-        <item>Normal - Left by left swipe, right by right</item>
-        <item>Reversed - Left by right swipe, right by left</item>
+        <item>Rotate by 0</item>
+        <item>Rotate by 90</item>
+        <item>Rotate by 180</item>
+        <item>Rotate by 270</item>
     </string-array>
     <string name="pref_wakelock">Wake lock</string>
 

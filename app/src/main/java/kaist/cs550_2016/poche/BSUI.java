@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import junit.framework.Assert;
+
 /**
  * Created by Leegeun Ha on 2016-05-09.
  */
@@ -71,8 +73,9 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         BSUIEvent adjustedEvent = event;
         ConfigHelper.StrokeOrientation orientation =
                 ConfigHelper.getInstance().getStrokeOrientation();
+        boolean reverse = ConfigHelper.getInstance().isStrokePull();
 
-        adjustedEvent = applyConfiguration(event, adjustedEvent, orientation);
+        adjustedEvent = applyConfiguration(event, adjustedEvent, orientation, reverse);
 
         if (adjustedEvent != null) {
             bsuiEventListener.onBSUIEvent(adjustedEvent);
@@ -81,16 +84,66 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
     }
 
     private BSUIEvent applyConfiguration(BSUIEvent event, BSUIEvent adjustedEvent,
-                                         ConfigHelper.StrokeOrientation orientation) {
-        if (orientation == ConfigHelper.StrokeOrientation.REVERSED) {
-            switch (event) {
-                case STROKE_LEFT:
-                    adjustedEvent = BSUIEvent.STROKE_RIGHT;
+                                         ConfigHelper.StrokeOrientation orientation, boolean reverse) {
+        if (orientation != ConfigHelper.StrokeOrientation.NORTH) {
+            switch (orientation) {
+                case EAST:
+                    switch (event) {
+                        case STROKE_UP:
+                            adjustedEvent = BSUIEvent.STROKE_RIGHT;
+                            break;
+                        case STROKE_RIGHT:
+                            adjustedEvent = BSUIEvent.STROKE_DOWN;
+                            break;
+                        case STROKE_DOWN:
+                            adjustedEvent = BSUIEvent.STROKE_LEFT;
+                            break;
+                        case STROKE_LEFT:
+                            adjustedEvent = BSUIEvent.STROKE_UP;
+                            break;
+                    }
                     break;
-                case STROKE_RIGHT:
-                    adjustedEvent = BSUIEvent.STROKE_LEFT;
+                case SOUTH:
+                    switch (event) {
+                        case STROKE_UP:
+                            adjustedEvent = BSUIEvent.STROKE_DOWN;
+                            break;
+                        case STROKE_RIGHT:
+                            adjustedEvent = BSUIEvent.STROKE_LEFT;
+                            break;
+                        case STROKE_DOWN:
+                            adjustedEvent = BSUIEvent.STROKE_UP;
+                            break;
+                        case STROKE_LEFT:
+                            adjustedEvent = BSUIEvent.STROKE_RIGHT;
+                            break;
+                    }
                     break;
+                case WEST:
+                    switch (event) {
+                        case STROKE_UP:
+                            adjustedEvent = BSUIEvent.STROKE_LEFT;
+                            break;
+                        case STROKE_RIGHT:
+                            adjustedEvent = BSUIEvent.STROKE_UP;
+                            break;
+                        case STROKE_DOWN:
+                            adjustedEvent = BSUIEvent.STROKE_RIGHT;
+                            break;
+                        case STROKE_LEFT:
+                            adjustedEvent = BSUIEvent.STROKE_DOWN;
+                            break;
+                    }
+                    break;
+                default:
+                    Assert.assertNotNull(null);
             }
+        }
+        if (reverse) {
+            if (adjustedEvent == BSUIEvent.STROKE_LEFT)
+                adjustedEvent = BSUIEvent.STROKE_RIGHT;
+            else if (adjustedEvent == BSUIEvent.STROKE_RIGHT)
+                adjustedEvent = BSUIEvent.STROKE_LEFT;
         }
         return adjustedEvent;
     }
