@@ -144,6 +144,9 @@ public class MainActivity extends AppCompatActivity
         defaultAlbumArtAvarageColor =
                 ContextCompat.getColor(this, R.color.colorDefaultAlbumArtAverage);
 
+        if(ConfigHelper.getInstance().getPlayOrder() == ConfigHelper.PlayOrder.SHUFFLE)
+            playMode.setImageDrawable(getDrawable(R.drawable.shuffle));
+
         tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
     }
 
