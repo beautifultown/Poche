@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity
     private ImageView albumArtImageView;
     private ImageView nextAlbumArtImageView;
     private ImageView seekBarImageView;
+    private ImageView playMode;
     private RelativeLayout controlLayout;
 
     private Playlist playlist;
@@ -133,6 +134,7 @@ public class MainActivity extends AppCompatActivity
         albumArtImageView = (ImageView) findViewById(R.id.main_ImageAlbumArt);
         nextAlbumArtImageView = (ImageView) findViewById(R.id.main_NextImageAlbumArt);
         seekBarImageView = (ImageView) findViewById(R.id.main_SeekBar);
+        playMode = (ImageView) findViewById(R.id.main_Mode);
         controlLayout = (RelativeLayout) findViewById(R.id.main_Control_Layout);
 
         positionTextView.setText("0:00");
@@ -187,12 +189,6 @@ public class MainActivity extends AppCompatActivity
                 break;
             case STROKE_RIGHT:
                 NextTrack();
-                break;
-            case STROKE_DOUBLEUP:
-                SetPlayMode(ConfigHelper.PlayOrder.ORDERED);
-                break;
-            case STROKE_DOUBLEDOWN:
-                SetPlayMode(ConfigHelper.PlayOrder.SHUFFLE);
                 break;
         }
     }
@@ -366,11 +362,15 @@ public class MainActivity extends AppCompatActivity
         for (int i = 0; i < controlLayout.getChildCount(); i++) {
             ImageView iv = (ImageView) controlLayout.getChildAt(i);
             if (iv.getTag() == null) {
+                // not a bracket
                 iv.setColorFilter(color2, PorterDuff.Mode.SRC_IN);
             } else {
+                // bracket
                 iv.setColorFilter(color2ReducedOpacacity, PorterDuff.Mode.SRC_IN);
             }
         }
+        int somethingInTheMiddle = color2 - 0x77000000;
+        playMode.setColorFilter(somethingInTheMiddle, PorterDuff.Mode.SRC_IN);
     }
 
     /**

@@ -11,11 +11,9 @@ import android.view.MotionEvent;
 
 public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
-    private static final long DELAY_BETWEEN_DOUBLE_STROKE_MS = 480;
     private static final double STROKE_DEADZONE_ANGLE_DEGREE = 10;
     private static final double STROKE_MINIMUM_DISTANCE_PX = 200;
 
-    private BSUIEvent storedEvent, previousEvent;
     private BSUIEventListener bsuiEventListener;
 
     public void setBSUIEventListener(BSUIEventListener bsuiEventListener) {
@@ -69,17 +67,14 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
 
     private void fireEvent(BSUIEvent event) {
         if (bsuiEventListener == null) return;
-        if (storedEvent == null) Debug.stopwatchStart();
 
         BSUIEvent adjustedEvent = event;
         ConfigHelper.StrokeOrientation orientation =
                 ConfigHelper.getInstance().getStrokeOrientation();
 
         adjustedEvent = applyConfiguration(event, adjustedEvent, orientation);
-        adjustedEvent = handleDoubleStroke(event, adjustedEvent);
 
         if (adjustedEvent != null) {
-            previousEvent = adjustedEvent;
             bsuiEventListener.onBSUIEvent(adjustedEvent);
             Debug.toastStopwatch("ParseTouchEvent()");
         }
@@ -100,64 +95,12 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         return adjustedEvent;
     }
 
-    @Nullable
-    private BSUIEvent handleDoubleStroke(BSUIEvent event, BSUIEvent adjustedEvent) {
-        switch (event) {
-            case STROKE_UP:
-            case STROKE_DOWN:
-                if (storedEvent == event) {
-                    adjustedEvent = BSUIEvent.getDoubledStroke(event);
-                    storedEvent = null;
-                } else {
-                    storedEvent = adjustedEvent;
-                    adjustedEvent = null;
-                }
-                break;
-            default:
-                storedEvent = null;
-                break;
-        }
-
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (storedEvent == null) return;
-                switch (storedEvent) {
-                    case STROKE_UP:
-                    case STROKE_DOWN:
-                        bsuiEventListener.onBSUIEvent(storedEvent);
-                        Debug.toastStopwatch("ParseTouchEvent()");
-                        break;
-                }
-                storedEvent = null;
-            }
-        }, DELAY_BETWEEN_DOUBLE_STROKE_MS);
-        return adjustedEvent;
-    }
-
     public enum BSUIEvent {
         SINGLE_TAP,
         STROKE_UP,
         STROKE_DOWN,
         STROKE_LEFT,
-        STROKE_RIGHT,
-        STROKE_DOUBLEUP,
-        STROKE_DOUBLEDOWN;
-
-        private static BSUIEvent getDoubledStroke(BSUIEvent singleStroke) {
-            switch (singleStroke) {
-                case STROKE_UP:
-                    return STROKE_DOUBLEUP;
-                case STROKE_DOWN:
-                    return STROKE_DOUBLEDOWN;
-                case STROKE_LEFT:
-                    break;
-                case STROKE_RIGHT:
-                    break;
-            }
-            return null;
-        }
+        STROKE_RIGHT
     }
 
     public interface BSUIEventListener {
