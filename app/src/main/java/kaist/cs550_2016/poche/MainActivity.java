@@ -204,6 +204,8 @@ public class MainActivity extends AppCompatActivity
         mediaPlayerServiceBinder.setTrack(uri);
         updateMetadata(uri);
         directionLeft = false;
+        if(!mediaPlayerServiceBinder.isPlaying())
+            mediaPlayerServiceBinder.pauseTrack();
     }
 
     private void pauseResume() {

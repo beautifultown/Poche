@@ -85,5 +85,10 @@ public class MediaPlayerService extends Service {
             if(mediaPlayer == null) return 0;
             return mediaPlayer.getCurrentPosition();
         }
+
+        public boolean isPlaying() {
+            if(mediaPlayer == null) return false;
+            return mediaPlayer.isPlaying();
+        }
     }
 }
