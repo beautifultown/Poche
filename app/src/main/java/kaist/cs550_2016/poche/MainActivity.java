@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity
     private void adjustVolume(int volumeAdjustCommand) {
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                volumeAdjustCommand, AudioManager.FLAG_SHOW_UI);
+                volumeAdjustCommand, 0);
     }
 
     private void SetPlayMode(ConfigHelper.PlayOrder playOrder) {
