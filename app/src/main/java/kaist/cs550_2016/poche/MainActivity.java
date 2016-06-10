@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
                 volumeAdjustCommand, 0);
+        Toast.makeText(App.getAppContext(), "Volume: " + audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) , Toast.LENGTH_SHORT).show();
     }
 
     private void SetPlayMode(ConfigHelper.PlayOrder playOrder) {
