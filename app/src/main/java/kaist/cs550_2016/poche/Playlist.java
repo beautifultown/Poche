@@ -14,23 +14,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-// For parse method part:
-/*
- * Copyright 2014 William Seemann
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Represents list of playlist entry.<br>
+ * Must be created with {@link Playlist#parse(Context, Uri)}.
  */
-
 public class Playlist {
 
     private int currentTrackIndex;
@@ -99,29 +86,54 @@ public class Playlist {
         }
     }
 
-    // This m3u parser is partially from:
-    // https://github.com/wseemann/JavaPlaylistParser/blob/master/src/wseemann/media/jplaylistparser/parser/m3u/M3UPlaylistParser.java
-    public static Playlist parse(Context context, Uri uri) throws IOException {
-        final String EXTENDED_INFO_TAG = "#EXTM3U";
-        final String RECORD_TAG = "^[#][E|e][X|x][T|t][I|i][N|n][F|f].*";
+    /**
+     * Given Uri, parses the stream and create an instance of Playlist.
+     * @param context Needed to call {@link Context#getContentResolver()}.
+     * @param uri Data source to obtain stream.
+     * @return Parsed playlist object.
+     * @throws IOException if the given uri stream is invalid M3U format.
+     */
+    public static Playlist parse(Context context, Uri uri) throws Exception {
+        final String HEADER = "#EXTM3U";
+        final String TRACKINFO_PREFIX = "#EXTINF";
 
         InputStream stream = context.getContentResolver().openInputStream(uri);
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        String line = reader.readLine();
 
-        String line;
-        String metadata = null, path = null;
-        int trackNumber = 0;
+        if (!line.equals(HEADER)) {
+            throw new IOException("This file is not in valid M3U format.");
+        }
+
         List<Entry> playlist = new ArrayList<>();
+        int trackIndex = 0;
+        String trackInfo = null;
 
+        // Parse [(track information)path]+
         while ((line = reader.readLine()) != null) {
-            if (!(line.equalsIgnoreCase(EXTENDED_INFO_TAG) || line.trim().equals(""))) {
-                if (line.matches(RECORD_TAG)) {
-                    metadata = line.replaceAll("^(.*?),", "");
-                } else {
-                    path = Uri.encode(line.trim());
-                    playlist.add(new Entry(path, metadata, ++trackNumber));
+            line = line.trim();
+            if (line.isEmpty()) continue;
+
+            // Track information or path
+            if (line.startsWith(TRACKINFO_PREFIX)) {
+                if (trackInfo == null) {
+                    // Strip until first comma
+                    line = line.substring(line.indexOf(','));
+                    trackInfo = line.trim();
+                }
+                else {
+                    throw new IOException("This file is not in valid M3U format.");
                 }
             }
+            else {
+                String path = Uri.encode(line); // Consider unicode url (UTF-8)
+                playlist.add(new Entry(path, trackInfo, ++trackIndex));
+                trackInfo = null;
+            }
+        }
+
+        if (playlist.isEmpty()) {
+            throw new IOException("Playlist is empty.");
         }
 
         return new Playlist(uri, playlist);

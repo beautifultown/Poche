@@ -85,8 +85,7 @@ public class MainActivity extends AppCompatActivity
             Debug.stopwatchStart();
             playlist = Playlist.parse(this, playlistUri);
             Debug.toastStopwatch("Parse()");
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             Toast.makeText(this,
                     R.string.toast_fail_parseplaylist, Toast.LENGTH_LONG).show();
             e.printStackTrace();
