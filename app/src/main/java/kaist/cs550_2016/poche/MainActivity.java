@@ -145,8 +145,9 @@ public class MainActivity extends AppCompatActivity
         defaultAlbumArtAvarageColor =
                 ContextCompat.getColor(this, R.color.colorDefaultAlbumArtAverage);
 
-        if(ConfigHelper.getInstance().getPlayOrder() == ConfigHelper.PlayOrder.SHUFFLE)
-            playMode.setImageDrawable(getDrawable(R.drawable.shuffle));
+        if(ConfigHelper.getInstance().getPlayOrder() == ConfigHelper.PlayOrder.SHUFFLE) {
+            playMode.setImageResource(R.drawable.shuffle);
+        }
 
         tick = new Tick().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uiUpdateFrameRate);
     }
@@ -228,9 +229,9 @@ public class MainActivity extends AppCompatActivity
 
     private void adjustVolume(int volumeAdjustCommand) {
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                volumeAdjustCommand, 0);
-        Toast.makeText(App.getAppContext(), "Volume: " + audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) , Toast.LENGTH_SHORT).show();
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, volumeAdjustCommand, 0);
+        int volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        //Toast.makeText(this, "Volume: " + volume, Toast.LENGTH_SHORT).show();
     }
 
     private void SetPlayMode(ConfigHelper.PlayOrder playOrder) {

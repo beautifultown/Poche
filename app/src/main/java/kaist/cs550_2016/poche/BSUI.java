@@ -109,13 +109,21 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
                 break;
         }
 
+        adjustedEventIndex = (adjustedEventIndex + offset) % BSUIDirectionEvents.length;
+        BSUIEvent adjustedEvent = BSUIDirectionEvents[adjustedEventIndex];
+
         // Invert direction if pull is set
         if (isReverse) {
-            offset += BSUIDirectionEvents.length / 2;
+            switch (adjustedEvent) {
+                case STROKE_LEFT:
+                    adjustedEvent = BSUIEvent.STROKE_RIGHT;
+                    break;
+                case STROKE_RIGHT:
+                    adjustedEvent = BSUIEvent.STROKE_LEFT;
+                    break;
+            }
         }
-
-        adjustedEventIndex = (adjustedEventIndex + offset) % BSUIDirectionEvents.length;
-        return BSUIDirectionEvents[adjustedEventIndex];
+        return adjustedEvent;
     }
 
     public enum BSUIEvent {

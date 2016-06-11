@@ -13,7 +13,7 @@ public class Debug {
      * Whether to use debug mode.<br>
      * In production, this variable must be set to false.
      */
-    public static final boolean isDebug = false;
+    public static final boolean isDebug = true;
 
     /**
      * Wrapper for logging in debug mode.

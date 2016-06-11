@@ -43,6 +43,6 @@
 
     <string name="pref_wakelock">Wake lock</string>
 
-    <string name="pref_strokepull_summary">Pull to swipe</string>
+    <string name="pref_strokepull_summary">Pull to swipe horizontally</string>
 
 </resources>
