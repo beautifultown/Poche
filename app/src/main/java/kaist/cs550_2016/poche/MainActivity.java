@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 Debug.log("MotionEvent: " + event);
+                Debug.stopwatchStart();
                 gestureDetector.onTouchEvent(event);
                 return true;
             }

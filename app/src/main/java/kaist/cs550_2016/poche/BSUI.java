@@ -5,6 +5,10 @@ import android.support.annotation.Nullable;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import junit.framework.Assert;
+
+import java.util.Arrays;
+
 /**
  * Created by Leegeun Ha on 2016-05-09.
  */
@@ -19,6 +23,8 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
     public void setBSUIEventListener(BSUIEventListener bsuiEventListener) {
         this.bsuiEventListener = bsuiEventListener;
     }
+
+
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
@@ -68,11 +74,7 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
     private void fireEvent(BSUIEvent event) {
         if (bsuiEventListener == null) return;
 
-        BSUIEvent adjustedEvent = event;
-        ConfigHelper.StrokeOrientation orientation =
-                ConfigHelper.getInstance().getStrokeOrientation();
-
-        adjustedEvent = applyConfiguration(event, adjustedEvent, orientation);
+        BSUIEvent adjustedEvent = applyConfiguration(event);
 
         if (adjustedEvent != null) {
             bsuiEventListener.onBSUIEvent(adjustedEvent);
@@ -80,19 +82,40 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         }
     }
 
-    private BSUIEvent applyConfiguration(BSUIEvent event, BSUIEvent adjustedEvent,
-                                         ConfigHelper.StrokeOrientation orientation) {
-        if (orientation == ConfigHelper.StrokeOrientation.REVERSED) {
-            switch (event) {
-                case STROKE_LEFT:
-                    adjustedEvent = BSUIEvent.STROKE_RIGHT;
-                    break;
-                case STROKE_RIGHT:
-                    adjustedEvent = BSUIEvent.STROKE_LEFT;
-                    break;
-            }
+    private BSUIEvent applyConfiguration(BSUIEvent event) {
+
+        int adjustedEventIndex = Arrays.asList(BSUIDirectionEvents).indexOf(event);
+
+        // No direction-based gesture, thus no adjustment needed
+        if (adjustedEventIndex == -1) {
+            return event;
         }
-        return adjustedEvent;
+
+        ConfigHelper.StrokeOrientation orientation =
+                ConfigHelper.getInstance().getStrokeOrientation();
+        boolean isReverse = ConfigHelper.getInstance().isStrokePull();
+
+        int offset = 0;
+
+        switch (orientation) {
+            case EAST:
+                offset = 1;
+                break;
+            case SOUTH:
+                offset = 2;
+                break;
+            case WEST:
+                offset = 3;
+                break;
+        }
+
+        // Invert direction if pull is set
+        if (isReverse) {
+            offset += BSUIDirectionEvents.length / 2;
+        }
+
+        adjustedEventIndex = (adjustedEventIndex + offset) % BSUIDirectionEvents.length;
+        return BSUIDirectionEvents[adjustedEventIndex];
     }
 
     public enum BSUIEvent {
@@ -102,6 +125,13 @@ public class BSUI extends GestureDetector.SimpleOnGestureListener {
         STROKE_LEFT,
         STROKE_RIGHT
     }
+
+    private BSUIEvent[] BSUIDirectionEvents = {
+            BSUIEvent.STROKE_UP,
+            BSUIEvent.STROKE_RIGHT,
+            BSUIEvent.STROKE_DOWN,
+            BSUIEvent.STROKE_LEFT
+    };
 
     public interface BSUIEventListener {
         public void onBSUIEvent(BSUIEvent event);

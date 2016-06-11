@@ -159,7 +159,7 @@ public class ConfigActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             Debug.stopwatchStart();
-            for (String config : ConfigHelper.KEY_ALL_CONFIGS_IN_CONFIGACTIVITY) {
+            for (String config : ConfigHelper.getInstance().KEY_ALL_CONFIGS_IN_CONFIGACTIVITY) {
                 bindPreferenceSummaryToValue(findPreference(config));
             }
 

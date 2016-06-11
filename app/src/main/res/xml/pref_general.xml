@@ -1,7 +1,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ListPreference
-        android:key="PLAYORDER"
+        android:key="@string/pref_key_playorder"
         android:title="@string/pref_playorder"
         android:entries="@array/pref_playorder_summary"
         android:entryValues="@array/pref_playorder_values"
@@ -9,7 +9,7 @@
         android:positiveButtonText="@null"/>
 
     <ListPreference
-        android:key="STROKEORIENTATION"
+        android:key="@string/pref_key_strokeorientation"
         android:title="@string/pref_strokeorientation"
         android:entries="@array/pref_strokeorientation_summary"
         android:entryValues="@array/pref_strokeorientation_values"
@@ -17,7 +17,11 @@
         android:positiveButtonText="@null"/>
 
     <SwitchPreference
-        android:key="WAKELOCK"
+        android:key="@string/pref_key_strokepull"
+        android:title="@string/pref_strokepull_summary"/>
+
+    <SwitchPreference
+        android:key="@string/pref_key_wakelock"
         android:title="@string/pref_wakelock"/>
 
 </PreferenceScreen>
