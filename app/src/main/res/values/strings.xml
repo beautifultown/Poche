@@ -12,6 +12,11 @@
     <string name="toast_fail_parseplaylist">There\'re some problems with playlist file!</string>
 
     <!-- Strings related to Configurations -->
+    <string name="pref_key_playorder">PLAYORDER</string>
+    <string name="pref_key_strokeorientation">STROKEORIENTATION</string>
+    <string name="pref_key_strokepull">STROKEPULL</string>
+    <string name="pref_key_wakelock">WAKELOCK</string>
+
     <string name="pref_playorder">Play order</string>
     <string-array name="pref_playorder_summary">
         <item>Ordered</item>
@@ -23,18 +28,21 @@
     </string-array>
 
     <string name="pref_strokeorientation">Swipe orientation</string>
-    <string-array name="pref_strokeorientation_values">
-        <item>0</item>
-        <item>90</item>
-        <item>180</item>
-        <item>270</item>
-    </string-array>
     <string-array name="pref_strokeorientation_summary">
         <item>Rotate by 0</item>
         <item>Rotate by 90</item>
         <item>Rotate by 180</item>
         <item>Rotate by 270</item>
     </string-array>
+    <string-array name="pref_strokeorientation_values">
+        <item>NORTH</item>
+        <item>EAST</item>
+        <item>SOUTH</item>
+        <item>WEST</item>
+    </string-array>
+
     <string name="pref_wakelock">Wake lock</string>
+
+    <string name="pref_strokepull_summary">Pull to swipe</string>
 
 </resources>
